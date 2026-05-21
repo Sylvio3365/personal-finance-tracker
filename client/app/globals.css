@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f3ee;
+  --foreground: #1a1a1a;
+  --surface: #ffffff;
+  --ink-subtle: #4b4b4b;
+  --accent: #0c4a3c;
+  --accent-2: #f2b05f;
+  --shadow: rgba(17, 24, 39, 0.08);
+  --bg-grad-1: #f9f0e2;
+  --bg-grad-2: #e6f2ec;
+}
+
+.dark {
+  --background: #0f1111;
+  --foreground: #f4f1ea;
+  --surface: #171a1b;
+  --ink-subtle: #b6b1a9;
+  --accent: #6ddba6;
+  --accent-2: #f5c478;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --bg-grad-1: #18201d;
+  --bg-grad-2: #1d2124;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-space-grotesk);
+  --font-display: var(--font-fraunces);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.select-field {
+  appearance: none;
+  background-color: #ffffff;
+  background-image: linear-gradient(45deg, transparent 50%, #5a5a5a 50%),
+    linear-gradient(135deg, #5a5a5a 50%, transparent 50%),
+    linear-gradient(to right, #d9d5ce, #d9d5ce);
+  background-position: calc(100% - 18px) calc(1em + 2px),
+    calc(100% - 12px) calc(1em + 2px),
+    calc(100% - 2.5em) 0.65em;
+  background-size: 6px 6px, 6px 6px, 1px 1.6em;
+  background-repeat: no-repeat;
+  padding-right: 2.5rem;
+}
+
+.dark .select-field {
+  background-color: #121415;
+  color: var(--foreground);
+  border-color: rgba(255, 255, 255, 0.1);
+  background-image: linear-gradient(45deg, transparent 50%, #b6b1a9 50%),
+    linear-gradient(135deg, #b6b1a9 50%, transparent 50%),
+    linear-gradient(to right, #3a3f42, #3a3f42);
 }
