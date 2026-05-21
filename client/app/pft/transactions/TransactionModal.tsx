@@ -18,14 +18,14 @@ export default function TransactionModal() {
       <form className="mt-6 grid gap-4">
         <label className="grid gap-2 text-sm font-medium">
           Type
-          <select className="select-field h-11 rounded-2xl border border-black/10 px-4 text-sm outline-none transition focus:border-[var(--accent)]">
+          <select className="select-field h-11 rounded-2xl border border-black/10 dark:border-white/10 px-4 text-sm outline-none transition focus:border-[var(--accent)]">
             <option>Revenu</option>
             <option>Depense</option>
           </select>
         </label>
         <label className="grid gap-2 text-sm font-medium">
           Categorie
-          <select className="select-field h-11 rounded-2xl border border-black/10 px-4 text-sm outline-none transition focus:border-[var(--accent)]">
+          <select className="select-field h-11 rounded-2xl border border-black/10 dark:border-white/10 px-4 text-sm outline-none transition focus:border-[var(--accent)]">
             <option>Nourriture</option>
             <option>Transport</option>
             <option>Salaire</option>
@@ -36,14 +36,14 @@ export default function TransactionModal() {
           <input
             type="text"
             placeholder="0,00"
-            className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
           />
         </label>
         <label className="grid gap-2 text-sm font-medium">
           Date
           <input
             type="date"
-            className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
           />
         </label>
         <label className="grid gap-2 text-sm font-medium">
@@ -51,7 +51,7 @@ export default function TransactionModal() {
           <input
             type="text"
             placeholder="Optionnel"
-            className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
           />
         </label>
         <button className="mt-2 h-11 rounded-2xl bg-[var(--accent)] text-sm font-semibold text-white transition hover:brightness-95">

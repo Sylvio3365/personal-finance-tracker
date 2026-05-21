@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f7f3ee;
   --foreground: #1a1a1a;
@@ -17,8 +19,8 @@
   --foreground: #f4f1ea;
   --surface: #171a1b;
   --ink-subtle: #b6b1a9;
-  --accent: #9ad6c1;
-  --accent-2: #f2b05f;
+  --accent: #6ddba6;
+  --accent-2: #f5c478;
   --shadow: rgba(0, 0, 0, 0.3);
   --bg-grad-1: #18201d;
   --bg-grad-2: #1d2124;
@@ -32,11 +34,10 @@
 }
 
 body {
-  background: radial-gradient(1200px 800px at 10% 10%, var(--bg-grad-1) 0%, transparent 60%),
-    radial-gradient(900px 700px at 90% 20%, var(--bg-grad-2) 0%, transparent 55%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .select-field {

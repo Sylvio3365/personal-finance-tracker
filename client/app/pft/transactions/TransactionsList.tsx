@@ -12,10 +12,10 @@ export default function TransactionsList() {
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#f8f6f2] p-4"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
         >
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[var(--accent)]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/10 text-[var(--accent)]">
               <IconList className="h-5 w-5" />
             </span>
             <div>
@@ -23,7 +23,7 @@ export default function TransactionsList() {
               <p className="text-xs text-[var(--ink-subtle)]">{item.type}</p>
             </div>
           </div>
-          <p className="text-sm font-semibold">{item.montant} EUR</p>
+          <p className="text-sm font-semibold">{item.montant} Ar</p>
         </div>
       ))}
     </div>

@@ -21,7 +21,7 @@ export default function CategoryModal() {
           <input
             type="text"
             placeholder="Ex: Nourriture"
-            className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
           />
         </label>
         <label className="grid gap-2 text-sm font-medium">
@@ -29,7 +29,7 @@ export default function CategoryModal() {
           <input
             type="text"
             placeholder="0,00"
-            className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
           />
         </label>
         <button className="mt-2 h-11 rounded-2xl bg-[var(--accent)] text-sm font-semibold text-white transition hover:brightness-95">

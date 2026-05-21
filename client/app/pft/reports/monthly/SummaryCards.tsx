@@ -1,7 +1,7 @@
 const cards = [
-  { label: "Total revenus", value: "2 200,00 EUR" },
-  { label: "Total depenses", value: "-540,30 EUR" },
-  { label: "Solde net", value: "+1 659,70 EUR" },
+  { label: "Total revenus", value: "2 200,00 Ar" },
+  { label: "Total depenses", value: "-540,30 Ar" },
+  { label: "Solde net", value: "+1 659,70 Ar" },
 ];
 
 export default function SummaryCards() {

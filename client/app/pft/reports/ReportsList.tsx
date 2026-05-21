@@ -9,7 +9,7 @@ export default function ReportsList() {
         href="/pft/reports/monthly"
       >
         <span className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3efe6] text-[var(--accent)]">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]">
             <IconChart className="h-5 w-5" />
           </span>
           Resume mensuel

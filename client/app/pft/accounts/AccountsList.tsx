@@ -12,10 +12,10 @@ export default function AccountsList() {
       {accounts.map((compte) => (
         <div
           key={compte.nom}
-          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#f8f6f2] p-4"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
         >
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[var(--accent)]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/10 text-[var(--accent)]">
               <IconWallet className="h-5 w-5" />
             </span>
             <div>
@@ -24,7 +24,7 @@ export default function AccountsList() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold">{compte.solde} EUR</p>
+            <p className="text-sm font-semibold">{compte.solde} Ar</p>
             <p className="text-[11px] text-[var(--ink-subtle)]">Solde actuel</p>
           </div>
         </div>

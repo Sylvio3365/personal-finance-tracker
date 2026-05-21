@@ -12,18 +12,18 @@ export default function CategorySpendList() {
         {categories.map((item) => (
           <div
             key={item.label}
-            className="rounded-2xl border border-black/5 bg-[#f8f6f2] p-4"
+            className="rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">{item.label}</p>
                 <p className="text-xs text-[var(--ink-subtle)]">
-                  {item.total} EUR / {item.limite} EUR
+                  {item.total} Ar / {item.limite} Ar
                 </p>
               </div>
               <p className="text-sm font-semibold">{item.pct}%</p>
             </div>
-            <div className="mt-3 h-2 w-full rounded-full bg-white">
+            <div className="mt-3 h-2 w-full rounded-full bg-white dark:bg-white/10">
               <div
                 className="h-2 rounded-full bg-[var(--accent)]"
                 style={{ width: `${item.pct}%` }}

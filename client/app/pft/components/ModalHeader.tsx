@@ -11,7 +11,7 @@ export default function ModalHeader({ title, closeId }: ModalHeaderProps) {
       <h3 className="text-lg font-semibold">{title}</h3>
       <label
         htmlFor={closeId}
-        className="flex cursor-pointer items-center gap-2 rounded-full bg-[#f3efe6] px-3 py-1 text-xs font-semibold"
+        className="flex cursor-pointer items-center gap-2 rounded-full bg-[#f3efe6] dark:bg-white/10 dark:text-white px-3 py-1 text-xs font-semibold"
       >
         <IconClose className="h-3 w-3" />
         Fermer
