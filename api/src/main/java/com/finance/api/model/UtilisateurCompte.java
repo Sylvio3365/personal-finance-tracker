@@ -20,11 +20,24 @@ public class UtilisateurCompte {
     @Column(length = 50)
     private String soldeActuel;
 
-    @OneToOne
-    @JoinColumn(name = "id_type_compte", referencedColumnName = "idTypeCompte", nullable = false, unique = true)
+    @ManyToOne
+    @JoinColumn(name = "id_type_compte", referencedColumnName = "idTypeCompte", nullable = false)
     private TypeCompte typeCompte;
 
-    @OneToOne
-    @JoinColumn(name = "id_utilisateur", referencedColumnName = "idUtilisateur", nullable = false, unique = true)
+    @ManyToOne
+    @JoinColumn(name = "id_utilisateur", referencedColumnName = "idUtilisateur", nullable = false)
     private Utilisateur utilisateur;
+
+    public void setSoldeActuel(String soldeActuel) {
+        if (soldeActuel != null && !soldeActuel.isBlank()) {
+            try {
+                if (new java.math.BigDecimal(soldeActuel).compareTo(java.math.BigDecimal.ZERO) < 0) {
+                    throw new IllegalArgumentException("Le solde ne peut pas être négatif");
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Format de solde invalide");
+            }
+        }
+        this.soldeActuel = soldeActuel;
+    }
 }
