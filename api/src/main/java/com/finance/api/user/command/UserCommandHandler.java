@@ -41,8 +41,8 @@ public class UserCommandHandler {
                 saved.getIdUtilisateur(),
                 saved.getNom(),
                 saved.getPrenom(),
+                saved.getNom() + " " + saved.getPrenom(),
                 saved.getEmail(),
-                saved.getDtn()
-        );
+                saved.getDtn());
     }
 }

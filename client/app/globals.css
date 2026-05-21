@@ -3,32 +3,40 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f7f3ee;
-  --foreground: #1a1a1a;
+  --background: #ffffff;
+  --foreground: #09090b;
   --surface: #ffffff;
-  --ink-subtle: #4b4b4b;
-  --accent: #0c4a3c;
-  --accent-2: #f2b05f;
-  --shadow: rgba(17, 24, 39, 0.08);
-  --bg-grad-1: #f9f0e2;
-  --bg-grad-2: #e6f2ec;
+  --surface-hover: #f4f4f5;
+  --ink-subtle: #71717a;
+  --accent: #10b981;
+  --accent-soft: rgba(16, 185, 129, 0.1);
+  --accent-2: #f59e0b;
+  --shadow: rgba(0, 0, 0, 0.05);
+  --border: #e4e4e7;
+  --bg-grad-1: #f8fafc;
+  --bg-grad-2: #f1f5f9;
 }
 
 .dark {
-  --background: #0f1111;
-  --foreground: #f4f1ea;
-  --surface: #171a1b;
-  --ink-subtle: #b6b1a9;
-  --accent: #6ddba6;
-  --accent-2: #f5c478;
-  --shadow: rgba(0, 0, 0, 0.3);
-  --bg-grad-1: #18201d;
-  --bg-grad-2: #1d2124;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --ink-subtle: #a1a1aa;
+  --accent: #10b981;
+  --accent-soft: rgba(16, 185, 129, 0.15);
+  --accent-2: #fbbf24;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --border: #27272a;
+  --bg-grad-1: #020617;
+  --bg-grad-2: #0f172a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
   --font-sans: var(--font-space-grotesk);
   --font-display: var(--font-fraunces);
 }
@@ -37,28 +45,64 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* Base styles for premium feel */
+h1, h2, h3, .font-display {
+  font-family: var(--font-fraunces), serif;
+  letter-spacing: -0.02em;
+}
+
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px var(--shadow), 0 2px 4px -2px var(--shadow);
+  border-radius: 1rem;
+}
+
+.dark .glass-card {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.input-field {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+  font-size: 0.875rem;
+}
+
+.input-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .select-field {
   appearance: none;
-  background-color: #ffffff;
-  background-image: linear-gradient(45deg, transparent 50%, #5a5a5a 50%),
-    linear-gradient(135deg, #5a5a5a 50%, transparent 50%),
-    linear-gradient(to right, #d9d5ce, #d9d5ce);
-  background-position: calc(100% - 18px) calc(1em + 2px),
-    calc(100% - 12px) calc(1em + 2px),
-    calc(100% - 2.5em) 0.65em;
-  background-size: 6px 6px, 6px 6px, 1px 1.6em;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-size: 1rem;
   background-repeat: no-repeat;
   padding-right: 2.5rem;
 }
 
 .dark .select-field {
-  background-color: #121415;
-  color: var(--foreground);
-  border-color: rgba(255, 255, 255, 0.1);
-  background-image: linear-gradient(45deg, transparent 50%, #b6b1a9 50%),
-    linear-gradient(135deg, #b6b1a9 50%, transparent 50%),
-    linear-gradient(to right, #3a3f42, #3a3f42);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
