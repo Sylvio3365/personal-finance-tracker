@@ -64,3 +64,7 @@ WHERE mot_de_passe IS NULL;
 
 ALTER TABLE utilisateur
 ALTER COLUMN mot_de_passe SET NOT NULL;
+
+
+ALTER TABLE utilisateur_compte DROP CONSTRAINT ukh85f3deqlva4hoskm7ucc9se1;
+

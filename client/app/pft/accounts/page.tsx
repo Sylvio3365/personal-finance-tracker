@@ -1,9 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { IconWallet } from "../components/icons";
 import AccountModal from "./AccountModal";
 import AccountsList from "./AccountsList";
 
 export default function AccountsPage() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   return (
     <div className="min-h-screen w-full px-6 py-10 sm:px-10 lg:px-16">
       <main className="mx-auto mt-6 w-full max-w-5xl">
@@ -15,8 +19,8 @@ export default function AccountsPage() {
         />
 
         <section className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-8">
-          <AccountModal />
-          <AccountsList />
+          <AccountModal onAccountCreated={() => setRefreshTrigger((prev) => prev + 1)} />
+          <AccountsList refreshTrigger={refreshTrigger} />
         </section>
       </main>
     </div>
