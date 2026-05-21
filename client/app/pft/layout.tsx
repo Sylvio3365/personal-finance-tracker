@@ -67,7 +67,7 @@ export default function AppLayout({
           <Link className="flex items-center gap-3" href="/pft">
             <AppLogo className="h-9 w-9" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold">Tableau de bord</span>
+              <span className="text-sm font-semibold"></span>
               {user && (
                 <span className="text-[10px] text-[var(--ink-subtle)] leading-none">
                   {user.fullName}

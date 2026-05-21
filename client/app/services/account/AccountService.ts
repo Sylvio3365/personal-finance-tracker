@@ -20,6 +20,19 @@ export interface AccountResponse {
   utilisateurId: number;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  itemsPerPage: number;
+}
+
+export interface AccountFilters {
+  typeCompteId?: number;
+  searchTerm?: string;
+}
+
 export class AccountService {
   // Query operations
   static async getTypeComptes(): Promise<TypeCompte[]> {
@@ -46,6 +59,56 @@ export class AccountService {
       throw new Error("Erreur lors du chargement des comptes");
     }
     return response.json();
+  }
+
+  // Liste avec pagination + filtres → appel au nouveau endpoint backend /filter
+  static async listByUtilisateurWithFilters(
+    utilisateurId: number,
+    page: number = 1,
+    limit: number = 10,
+    filters: AccountFilters = {}
+  ): Promise<PaginatedResponse<AccountResponse>> {
+    const params = new URLSearchParams({
+      utilisateurId: utilisateurId.toString(),
+      page: page.toString(),
+      limit: limit.toString()
+    });
+
+    if (filters.typeCompteId) {
+      params.append('typeCompteId', filters.typeCompteId.toString());
+    }
+
+    if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+      params.append('searchTerm', filters.searchTerm.trim());
+    }
+
+    const response = await fetch(`${API_BASE_URL}/query/comptes/filter?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error("Erreur lors du chargement des comptes");
+    }
+
+    const data = await response.json() as {
+      data: { id: number; nom: string; soldeActuel: string | number; typeCompteId: number; utilisateurId: number }[];
+      totalItems: number;
+      totalPages: number;
+      currentPage: number;
+      itemsPerPage: number;
+    };
+
+    return {
+      data: data.data.map((item) => ({
+        id: item.id,
+        nom: item.nom,
+        soldeActuel: typeof item.soldeActuel === "number" ? item.soldeActuel : parseFloat(item.soldeActuel) || 0,
+        typeCompteId: item.typeCompteId,
+        utilisateurId: item.utilisateurId,
+      })),
+      totalItems: data.totalItems,
+      totalPages: data.totalPages,
+      currentPage: data.currentPage,
+      itemsPerPage: data.itemsPerPage
+    };
   }
 
   // Command operations
