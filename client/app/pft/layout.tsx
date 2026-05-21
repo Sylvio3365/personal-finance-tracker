@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { IconChart, IconList, IconTag, IconWallet } from "./components/icons";
 import AppLogo from "../components/AppLogo";
+import Home from "../page";
 
 function IconLogout({ className }: { className?: string }) {
   return (
@@ -29,8 +30,32 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ fullName: string } | null>(null);
+  const [loading, setLoading] = useState(true);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    router.push("/");
+  };
+
+  if (loading) return null;
+
+  if (!user) {
+    return <Home />;
+  }
+
   const linkBase =
     "transition rounded-full px-3 py-1 text-sm hover:text-[var(--accent)]";
   const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
@@ -41,7 +66,14 @@ export default function AppLayout({
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
           <Link className="flex items-center gap-3" href="/pft">
             <AppLogo className="h-9 w-9" />
-            <span className="text-sm font-semibold">Tableau de bord</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">Tableau de bord</span>
+              {user && (
+                <span className="text-[10px] text-[var(--ink-subtle)] leading-none">
+                  {user.fullName}
+                </span>
+              )}
+            </div>
           </Link>
           <div className="hidden items-center gap-2 text-[var(--ink-subtle)] md:flex">
             <Link
@@ -90,15 +122,15 @@ export default function AppLayout({
             </Link>
             {/* Separator + Logout */}
             <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
-            <Link
+            <button
+              onClick={handleLogout}
               className="transition rounded-full px-3 py-1 text-sm text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
-              href="/"
             >
               <span className="inline-flex items-center gap-2">
                 <IconLogout className="h-4 w-4" />
                 Deconnexion
               </span>
-            </Link>
+            </button>
           </div>
           <button
             type="button"
@@ -161,16 +193,15 @@ export default function AppLayout({
               </Link>
               {/* Separator + Logout */}
               <div className="my-1 h-px bg-black/5 dark:bg-white/10" />
-              <Link
-                className="transition rounded-full px-3 py-1 text-sm text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
-                href="/"
-                onClick={() => setIsMenuOpen(false)}
+              <button
+                onClick={handleLogout}
+                className="transition rounded-full px-3 py-1 text-sm text-red-100 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300 w-full text-left"
               >
                 <span className="inline-flex items-center gap-2">
                   <IconLogout className="h-4 w-4" />
                   Deconnexion
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
         ) : null}

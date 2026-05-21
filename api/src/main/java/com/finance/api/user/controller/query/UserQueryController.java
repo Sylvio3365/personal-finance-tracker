@@ -3,6 +3,7 @@ package com.finance.api.user.controller.query;
 import com.finance.api.user.query.GetUtilisateurByIdQuery;
 import com.finance.api.user.query.UserQueryHandler;
 import com.finance.api.user.dto.UserResponse;
+import com.finance.api.user.dto.LoginRequest;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,6 +13,11 @@ public class UserQueryController {
 
     public UserQueryController(UserQueryHandler userQueryHandler) {
         this.userQueryHandler = userQueryHandler;
+    }
+
+    @PostMapping("/login")
+    public UserResponse login(@RequestBody LoginRequest request) {
+        return userQueryHandler.login(request);
     }
 
     @GetMapping("/{utilisateurId}")

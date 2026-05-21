@@ -18,7 +18,7 @@ public class UserCommandController {
         this.userCommandHandler = userCommandHandler;
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public UserResponse register(@RequestBody UserRegistrationRequest request) {
         RegisterUtilisateurCommand command = new RegisterUtilisateurCommand(
                 request.getNom(),
