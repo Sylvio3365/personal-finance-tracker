@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconMail, IconLock, IconEye, IconEyeOff } from "../../components/icons";
+import {
+  IconMail,
+  IconLock,
+  IconEye,
+  IconEyeOff,
+} from "../../components/icons";
 import Toast from "../../components/Toast";
 import { UserService } from "../../services/user";
 
@@ -11,7 +16,10 @@ export default function LoginPage() {
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("jean.dupont@test.com");
   const [password, setPassword] = useState("password123");
@@ -101,7 +109,11 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--ink-subtle)]/75 hover:text-[var(--ink-subtle)] transition"
-                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  aria-label={
+                    showPassword
+                      ? "Masquer le mot de passe"
+                      : "Afficher le mot de passe"
+                  }
                 >
                   {showPassword ? (
                     <IconEyeOff className="h-5 w-5" />
