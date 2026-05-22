@@ -129,14 +129,17 @@ export default function Home() {
                     <input
                       type="email"
                       name="email"
+                      defaultValue="jean.dupont@test.com"
                       placeholder="vous@exemple.com"
                       className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] pl-12 pr-4 text-sm outline-none transition focus:border-[var(--accent)]"
                       required
+                      autoComplete="off"
                     />
                   </div>
                 </label>
                 <PasswordInput
                   name="password"
+                  defaultValue="password123"
                   placeholder="Votre mot de passe"
                   required
                 />

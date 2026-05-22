@@ -6,30 +6,68 @@ import { useState, useEffect } from "react";
 import { IconChart, IconList, IconTag, IconWallet } from "./components/icons";
 import AppLogo from "../components/AppLogo";
 import Home from "../page";
+import { IconLogout } from "../components/icons/IconLogout";
 
-function IconLogout({ className }: { className?: string }) {
+
+
+// ── Avatar avec initiales ──
+function UserAvatar({ fullName }: { fullName: string }) {
+  const initials = fullName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
+    <div className="h-9 w-9 rounded-full bg-[var(--accent)] text-white text-xs font-bold flex items-center justify-center">
+      {initials}
+    </div>
   );
 }
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// ── Menu utilisateur dropdown ──
+function UserMenu({ user, onLogout }: { user: { fullName: string }; onLogout: () => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-3 rounded-full px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition"
+      >
+        <UserAvatar fullName={user.fullName} />
+        <span className="hidden text-sm font-medium sm:inline">{user.fullName}</span>
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 top-full mt-2 z-40 rounded-xl border border-black/5 dark:border-white/10 bg-[var(--surface)] shadow-lg dark:shadow-black/30 overflow-hidden min-w-[200px]">
+            <div className="px-4 py-3 border-b border-black/5 dark:border-white/10">
+              <p className="text-xs text-[var(--ink-subtle)]">Connecté en tant que</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{user.fullName}</p>
+            </div>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onLogout();
+              }}
+              className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition flex items-center gap-2"
+            >
+              <IconLogout className="h-4 w-4" />
+              Déconnexion
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<{ fullName: string } | null>(null);
@@ -58,7 +96,8 @@ export default function AppLayout({
 
   const linkBase =
     "transition rounded-full px-3 py-1 text-sm hover:text-[var(--accent)]";
-  const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(`${path}/`);
 
   return (
     <div className="min-h-screen">
@@ -66,19 +105,14 @@ export default function AppLayout({
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
           <Link className="flex items-center gap-3" href="/pft">
             <AppLogo className="h-9 w-9" />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">Tableau de bord</span>
-              {user && (
-                <span className="text-[10px] text-[var(--ink-subtle)] leading-none">
-                  {user.fullName}
-                </span>
-              )}
-            </div>
+            <span className="text-sm font-semibold hidden sm:inline">PFT</span>
           </Link>
           <div className="hidden items-center gap-2 text-[var(--ink-subtle)] md:flex">
             <Link
               className={`${linkBase} ${
-                isActive("/pft/accounts") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                isActive("/pft/accounts")
+                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                  : ""
               }`}
               href="/pft/accounts"
             >
@@ -89,7 +123,9 @@ export default function AppLayout({
             </Link>
             <Link
               className={`${linkBase} ${
-                isActive("/pft/transactions") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                isActive("/pft/transactions")
+                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                  : ""
               }`}
               href="/pft/transactions"
             >
@@ -100,7 +136,9 @@ export default function AppLayout({
             </Link>
             <Link
               className={`${linkBase} ${
-                isActive("/pft/categories") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                isActive("/pft/categories")
+                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                  : ""
               }`}
               href="/pft/categories"
             >
@@ -111,7 +149,9 @@ export default function AppLayout({
             </Link>
             <Link
               className={`${linkBase} ${
-                isActive("/pft/reports") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                isActive("/pft/reports")
+                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                  : ""
               }`}
               href="/pft/reports"
             >
@@ -120,17 +160,9 @@ export default function AppLayout({
                 Rapports
               </span>
             </Link>
-            {/* Separator + Logout */}
+            {/* Separator + User Menu */}
             <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
-            <button
-              onClick={handleLogout}
-              className="transition rounded-full px-3 py-1 text-sm text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
-            >
-              <span className="inline-flex items-center gap-2">
-                <IconLogout className="h-4 w-4" />
-                Deconnexion
-              </span>
-            </button>
+            <UserMenu user={user} onLogout={handleLogout} />
           </div>
           <button
             type="button"
@@ -145,7 +177,9 @@ export default function AppLayout({
             <div className="grid gap-2">
               <Link
                 className={`${linkBase} ${
-                  isActive("/pft/accounts") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                  isActive("/pft/accounts")
+                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                    : ""
                 }`}
                 href="/pft/accounts"
                 onClick={() => setIsMenuOpen(false)}
@@ -157,7 +191,9 @@ export default function AppLayout({
               </Link>
               <Link
                 className={`${linkBase} ${
-                  isActive("/pft/transactions") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                  isActive("/pft/transactions")
+                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                    : ""
                 }`}
                 href="/pft/transactions"
                 onClick={() => setIsMenuOpen(false)}
@@ -169,7 +205,9 @@ export default function AppLayout({
               </Link>
               <Link
                 className={`${linkBase} ${
-                  isActive("/pft/categories") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                  isActive("/pft/categories")
+                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                    : ""
                 }`}
                 href="/pft/categories"
                 onClick={() => setIsMenuOpen(false)}
@@ -181,7 +219,9 @@ export default function AppLayout({
               </Link>
               <Link
                 className={`${linkBase} ${
-                  isActive("/pft/reports") ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]" : ""
+                  isActive("/pft/reports")
+                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                    : ""
                 }`}
                 href="/pft/reports"
                 onClick={() => setIsMenuOpen(false)}
@@ -191,17 +231,11 @@ export default function AppLayout({
                   Rapports
                 </span>
               </Link>
-              {/* Separator + Logout */}
+              {/* Separator + User Menu */}
               <div className="my-1 h-px bg-black/5 dark:bg-white/10" />
-              <button
-                onClick={handleLogout}
-                className="transition rounded-full px-3 py-1 text-sm text-red-100 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300 w-full text-left"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <IconLogout className="h-4 w-4" />
-                  Deconnexion
-                </span>
-              </button>
+              <div onClick={() => setIsMenuOpen(false)}>
+                <UserMenu user={user} onLogout={handleLogout} />
+              </div>
             </div>
           </div>
         ) : null}

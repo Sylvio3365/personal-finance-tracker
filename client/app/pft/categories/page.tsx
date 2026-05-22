@@ -1,6 +1,5 @@
 import PageHeader from "../components/PageHeader";
 import { IconTag } from "../components/icons";
-import CategoryModal from "./CategoryModal";
 import CategoriesList from "./CategoriesList";
 
 export default function CategoriesPage() {
@@ -15,7 +14,6 @@ export default function CategoriesPage() {
         />
 
         <section className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-8">
-          <CategoryModal />
           <CategoriesList />
         </section>
       </main>

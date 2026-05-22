@@ -14,9 +14,10 @@ export interface RegisterPayload {
 }
 
 export interface UserResponse {
-    id?: string;
+    id: number;
     nom: string;
     prenom: string;
+    fullName?: string;
     email: string;
     dtn?: string;
 }

@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface TypeCompte {
   id: number;
@@ -20,8 +20,23 @@ export interface AccountResponse {
   utilisateurId: number;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  itemsPerPage: number;
+}
+
+export interface AccountFilters {
+  typeCompteId?: number;
+  searchTerm?: string;
+  minSolde?: number;
+  maxSolde?: number;
+}
+
 export class AccountService {
-  // Query operations
+
   static async getTypeComptes(): Promise<TypeCompte[]> {
     const response = await fetch(`${API_BASE_URL}/query/references/types-compte`);
     if (!response.ok) {
@@ -48,7 +63,63 @@ export class AccountService {
     return response.json();
   }
 
-  // Command operations
+  static async listByUtilisateurWithFilters(
+    utilisateurId: number,
+    page: number = 1,
+    limit: number = 10,
+    filters: AccountFilters = {}
+  ): Promise<PaginatedResponse<AccountResponse>> {
+    const params = new URLSearchParams({
+      utilisateurId: utilisateurId.toString(),
+      page: page.toString(),
+      limit: limit.toString()
+    });
+
+    if (filters.typeCompteId) {
+      params.append('typeCompteId', filters.typeCompteId.toString());
+    }
+
+    if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+      params.append('searchTerm', filters.searchTerm.trim());
+    }
+
+    if (filters.minSolde !== undefined && filters.minSolde !== null) {
+      params.append('minSolde', filters.minSolde.toString());
+    }
+
+    if (filters.maxSolde !== undefined && filters.maxSolde !== null) {
+      params.append('maxSolde', filters.maxSolde.toString());
+    }
+
+    const response = await fetch(`${API_BASE_URL}/query/comptes/filter?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error("Erreur lors du chargement des comptes");
+    }
+
+    const data = await response.json() as {
+      data: { id: number; nom: string; soldeActuel: string | number; typeCompteId: number; utilisateurId: number }[];
+      totalItems: number;
+      totalPages: number;
+      currentPage: number;
+      itemsPerPage: number;
+    };
+
+    return {
+      data: data.data.map((item) => ({
+        id: item.id,
+        nom: item.nom,
+        soldeActuel: typeof item.soldeActuel === "number" ? item.soldeActuel : parseFloat(item.soldeActuel) || 0,
+        typeCompteId: item.typeCompteId,
+        utilisateurId: item.utilisateurId,
+      })),
+      totalItems: data.totalItems,
+      totalPages: data.totalPages,
+      currentPage: data.currentPage,
+      itemsPerPage: data.itemsPerPage
+    };
+  }
+
   static async create(payload: CreateAccountPayload): Promise<AccountResponse> {
     const response = await fetch(`${API_BASE_URL}/command/comptes`, {
       method: "POST",

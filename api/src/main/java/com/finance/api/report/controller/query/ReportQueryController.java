@@ -16,10 +16,13 @@ public class ReportQueryController {
 
     @GetMapping("/monthly-summary")
     public MonthlySummaryResponse getMonthlySummary(
+            @RequestParam Long utilisateurId,
             @RequestParam Long compteId,
             @RequestParam int annee,
             @RequestParam int mois
     ) {
+        // utilisateurId can be used for validation/authorization if needed
         return reportQueryHandler.getMonthlySummary(new GetMonthlySummaryQuery(compteId, annee, mois));
     }
 }
+

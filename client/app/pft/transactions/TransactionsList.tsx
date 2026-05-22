@@ -1,31 +1,503 @@
-import { IconList } from "../components/icons";
+"use client";
 
-const items = [
-  { label: "Salaire", type: "Revenu", montant: "+2 200,00" },
-  { label: "Courses", type: "Depense", montant: "-74,20" },
-  { label: "Transport", type: "Depense", montant: "-34,00" },
-];
+import { useState, useEffect, useRef } from "react";
+import {
+  IconWallet,
+  IconTrash,
+  IconFilter,
+  IconRefresh,
+  IconCheck,
+  IconPlus,
+} from "../components/icons";
+import Toast from "../../components/Toast";
+import LoadingIndicator from "../../components/LoadingIndicator";
+import {
+  AccountService,
+  AccountResponse,
+  TypeCompte,
+} from "../../services/account/AccountService";
+import {
+  TransactionService,
+  TransactionData,
+  TransactionFilters,
+} from "../../services/transaction/TransactionService";
+import { UserService } from "../../services/user/UserService";
+import { formatCurrency } from "../../utils/currency";
 
-export default function TransactionsList() {
+interface TransactionsListProps {
+  refreshTrigger?: number;
+}
+
+// ── Palette de couleurs par catégorie ──
+const CATEGORY_COLORS: Record<string, string> = {
+  Alimentation:
+    "bg-orange-100 text-orange-700  dark:bg-orange-500/20    dark:text-orange-400",
+  Transport:
+    "bg-sky-100    text-sky-700     dark:bg-sky-500/20       dark:text-sky-400",
+  Loisirs:
+    "bg-pink-100   text-pink-700    dark:bg-pink-500/20      dark:text-pink-400",
+  Santé:
+    "bg-red-100    text-red-700     dark:bg-red-500/20       dark:text-red-400",
+  Factures:
+    "bg-indigo-100 text-indigo-700  dark:bg-indigo-500/20    dark:text-indigo-400",
+  Logement:
+    "bg-violet-100 text-violet-700  dark:bg-violet-500/20    dark:text-violet-400",
+  Éducation:
+    "bg-lime-100   text-lime-700    dark:bg-lime-500/20      dark:text-lime-400",
+  Voyage:
+    "bg-cyan-100   text-cyan-700    dark:bg-cyan-500/20      dark:text-cyan-400",
+};
+
+function getCategoryColor(libelle: string): string {
   return (
-    <div className="mt-6 grid gap-4">
-      {items.map((item) => (
-        <div
-          key={item.label}
-          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
+    CATEGORY_COLORS[libelle] ||
+    "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400"
+  );
+}
+
+function getTypeAmountColor(libelle: string): string {
+  return libelle.toLowerCase() === "revenu"
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-red-600 dark:text-red-400";
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/**
+ * Select réutilisable avec menu déroulant personnalisé (pas de <select> natif).
+ */
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder = "Sélectionner...",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label || placeholder;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="h-11 w-full rounded-2xl border border-[var(--accent)]/30 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-10 text-sm outline-none transition-all duration-200 hover:border-[var(--accent)]/60 hover:bg-[var(--accent)]/5 dark:hover:bg-[var(--accent)]/10 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 cursor-pointer text-left flex items-center justify-between"
+      >
+        <span
+          className={`truncate ${!value ? "text-[var(--ink-subtle)]" : ""}`}
         >
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/10 text-[var(--accent)]">
-              <IconList className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">{item.label}</p>
-              <p className="text-xs text-[var(--ink-subtle)]">{item.type}</p>
-            </div>
-          </div>
-          <p className="text-sm font-semibold">{item.montant} Ar</p>
-        </div>
-      ))}
+          {selectedLabel}
+        </span>
+        <svg
+          className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--ink-subtle)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <ul className="absolute z-50 mt-1.5 max-h-56 w-full overflow-auto rounded-2xl border border-[var(--accent)]/20 bg-white dark:bg-[#1a1d1e] shadow-lg shadow-black/5 dark:shadow-black/30 py-1 text-sm">
+            {options.map((opt) => {
+              const selected = opt.value === value;
+              return (
+                <li key={opt.value}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between px-4 py-2 transition-colors ${
+                      selected
+                        ? "bg-[var(--accent)]/10 text-[var(--accent)] font-medium"
+                        : "text-[var(--foreground)] hover:bg-[var(--accent)]/5 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    {selected && (
+                      <svg
+                        className="h-4 w-4 text-[var(--accent)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
     </div>
+  );
+}
+
+export default function TransactionsList({
+  refreshTrigger,
+}: TransactionsListProps) {
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
+  const [comptes, setComptes] = useState<AccountResponse[]>([]);
+  const [typesCompte, setTypesCompte] = useState<TypeCompte[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
+  // Filtres
+  const [showFilters, setShowFilters] = useState(false);
+  const [tempFilters, setTempFilters] = useState<TransactionFilters>({});
+  const [activeFilters, setActiveFilters] = useState<TransactionFilters>({});
+
+  // ─── Chargement des références (comptes) ───────────────────
+  const loadReferences = async () => {
+    const user = UserService.getStoredUser();
+    if (!user) return;
+
+    if (comptes.length === 0) {
+      const raw = await AccountService.listByUtilisateur(
+        parseInt(String(user.id), 10),
+      );
+      setComptes(raw);
+    }
+    if (typesCompte.length === 0) {
+      setTypesCompte(await AccountService.getTypeComptes());
+    }
+  };
+
+  // ─── Chargement des transactions ──────────────────────────
+  const loadTransactions = async () => {
+    try {
+      setLoading(true);
+      await loadReferences();
+
+      const user = UserService.getStoredUser();
+      if (!user) {
+        setToast({ message: "Utilisateur non trouvé", type: "error" });
+        return;
+      }
+
+      const userId = parseInt(String(user.id), 10);
+      const response = await TransactionService.listPaginated(
+        userId,
+        currentPage,
+        itemsPerPage,
+        activeFilters,
+      );
+
+      setTransactions(response.data);
+      setTotalPages(response.totalPages);
+      setTotalItems(response.totalItems);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erreur";
+      setToast({ message: errorMessage, type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [refreshTrigger, currentPage, activeFilters]);
+
+  // ─── Filtres ──────────────────────────────────────────────
+  const handleApplyFilters = () => {
+    setActiveFilters(tempFilters);
+    setCurrentPage(1);
+    setShowFilters(false);
+  };
+
+  const handleResetFilters = () => {
+    setTempFilters({});
+    setActiveFilters({});
+    setCurrentPage(1);
+    setShowFilters(false);
+  };
+
+  const getCompteName = (compteId: number): string => {
+    return comptes.find((c) => c.id === compteId)?.nom || "Compte inconnu";
+  };
+
+  // ─── Rendu ────────────────────────────────────────────────
+  if (loading && transactions.length === 0) {
+    return <LoadingIndicator text="Chargement des transactions..." />;
+  }
+
+  return (
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* ── Header + bouton Filtrer ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-6 mb-4">
+        <div>
+          <h3 className="text-sm font-medium text-[var(--ink)]">
+            Toutes les transactions
+            {totalItems > 0 && (
+              <span className="ml-2 text-xs text-[var(--ink-subtle)]">
+                ({totalItems} entrée{totalItems > 1 ? "s" : ""})
+              </span>
+            )}
+          </h3>
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${
+            Object.keys(activeFilters).length > 0
+              ? "bg-[var(--accent)] text-white"
+              : "border border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+          }`}
+        >
+          <IconFilter className="h-4 w-4" />
+          Filtrer
+          {Object.keys(activeFilters).length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 rounded-full">
+              {Object.keys(activeFilters).length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Panneau de filtres ── */}
+      {showFilters && (
+        <div className="mb-6 p-4 rounded-xl border border-black/10 dark:border-white/10 bg-[#f8f6f2] dark:bg-[#1a1d1e]">
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Compte */}
+            <label className="grid gap-2 text-sm font-medium">
+              Compte
+              <CustomSelect
+                value={tempFilters.compteId?.toString() || ""}
+                onChange={(v) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    compteId: v ? parseInt(v, 10) : undefined,
+                  })
+                }
+                options={[
+                  { label: "Tous les comptes", value: "" },
+                  ...comptes.map((c) => ({
+                    label: c.nom,
+                    value: c.id.toString(),
+                  })),
+                ]}
+              />
+            </label>
+
+            {/* Type de transaction */}
+            <label className="grid gap-2 text-sm font-medium">
+              Type
+              <CustomSelect
+                value={tempFilters.transactionTypeId?.toString() || ""}
+                onChange={(v) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    transactionTypeId: v ? parseInt(v, 10) : undefined,
+                  })
+                }
+                options={[
+                  { label: "Tous les types", value: "" },
+                  { label: "Revenu", value: "1" },
+                  { label: "Dépense", value: "2" },
+                ]}
+              />
+            </label>
+
+            {/* Catégorie */}
+            <label className="grid gap-2 text-sm font-medium">
+              Catégorie
+              <CustomSelect
+                value={tempFilters.categorieId?.toString() || ""}
+                onChange={(v) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    categorieId: v ? parseInt(v, 10) : undefined,
+                  })
+                }
+                options={[
+                  { label: "Toutes les catégories", value: "" },
+                  ...Object.keys(CATEGORY_COLORS).map((cat) => ({
+                    label: cat,
+                    value: cat,
+                  })),
+                ]}
+              />
+            </label>
+          </div>
+
+          {/* Boutons Valider / Réinitialiser avec icônes */}
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleApplyFilters}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-2xl text-sm font-semibold transition hover:brightness-95 active:scale-[0.98]"
+            >
+              <IconCheck className="h-4 w-4" />
+              Valider les filtres
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center gap-2 px-4 py-2 border border-black/10 dark:border-white/10 rounded-2xl text-sm transition hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98]"
+            >
+              <IconRefresh className="h-4 w-4" />
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Liste des transactions ── */}
+      {transactions.length === 0 ? (
+        <div className="text-center text-sm text-[var(--ink-subtle)] py-8">
+          {Object.keys(activeFilters).length > 0
+            ? "Aucune transaction ne correspond à vos critères."
+            : "Aucune transaction. Ajoutez votre première transaction pour commencer !"}
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-3">
+            {transactions.map((tx) => {
+              const isRevenu =
+                tx.transactionTypeLibelle.toLowerCase() === "revenu";
+              const amountColor = isRevenu
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-600 dark:text-red-400";
+              return (
+                <div
+                  key={tx.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium leading-tight ${getCategoryColor(
+                        tx.categorieLibelle,
+                      )}`}
+                    >
+                      {tx.categorieLibelle}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[var(--ink-subtle)] flex items-center gap-1">
+                        <IconWallet className="h-3 w-3" />
+                        {getCompteName(tx.utilisateurCompteId)}
+                      </span>
+                      {tx.note && (
+                        <p className="text-xs text-[var(--ink-subtle)] italic truncate max-w-[200px]">
+                          {tx.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={`text-sm font-semibold whitespace-nowrap ${amountColor}`}
+                    >
+                      {isRevenu ? "+" : "-"}
+                      {formatCurrency(Math.abs(tx.montant))}
+                    </span>
+                    <span className="text-[11px] text-[var(--ink-subtle)] whitespace-nowrap">
+                      {formatDate(tx.dateTransaction)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Pagination backend ── */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-black/10 dark:border-white/10">
+              <div className="text-xs text-[var(--ink-subtle)]">
+                Page {currentPage} sur {totalPages}
+                <span className="hidden sm:inline ml-1">
+                  ({totalItems} entrée{totalItems > 1 ? "s" : ""})
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg text-sm border border-black/10 dark:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5 transition"
+                >
+                  Précédent
+                </button>
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`hidden sm:block px-3 py-1.5 rounded-lg text-sm transition ${
+                          currentPage === pageNum
+                            ? "bg-[var(--accent)] text-white"
+                            : "border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg text-sm border border-black/10 dark:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5 transition"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </>
   );
 }

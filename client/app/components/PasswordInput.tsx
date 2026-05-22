@@ -8,6 +8,7 @@ interface PasswordInputProps {
   placeholder?: string;
   required?: boolean;
   value?: string;
+  defaultValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -16,6 +17,7 @@ export default function PasswordInput({
   placeholder = "Votre mot de passe",
   required = false,
   value,
+  defaultValue,
   onChange,
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +34,7 @@ export default function PasswordInput({
           name={name}
           placeholder={placeholder}
           value={value}
+          defaultValue={defaultValue}
           onChange={onChange}
           className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] pl-12 pr-12 text-sm outline-none transition focus:border-[var(--accent)]"
           required={required}

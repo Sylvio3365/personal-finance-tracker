@@ -15,3 +15,7 @@ INSERT INTO categorie (libelle, limite) VALUES
 ('Transport', 35000.00),
 ('Salaire', NULL),
 ('Loisirs', 20000.00);
+
+
+INSERT INTO type_compte (nom) VALUES
+('Mobile Money');
