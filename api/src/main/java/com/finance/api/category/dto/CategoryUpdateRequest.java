@@ -1,14 +1,10 @@
 package com.finance.api.category.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
+import lombok.Data;
 import java.math.BigDecimal;
 
-@Getter
-@AllArgsConstructor
-public class CategoryResponse {
-    private Long id;
+@Data
+public class CategoryUpdateRequest {
     private String libelle;
     private BigDecimal limite;
     private Boolean active;

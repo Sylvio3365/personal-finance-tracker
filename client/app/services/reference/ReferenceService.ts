@@ -4,6 +4,7 @@ export interface Category {
   id: number;
   libelle: string;
   limite?: number;
+  active: boolean;
 }
 
 export interface TransactionType {
@@ -37,6 +38,19 @@ export class ReferenceService {
     if (!response.ok) {
       const text = await response.text();
       throw new Error(text || "Erreur création catégorie");
+    }
+    return response.json();
+  }
+
+  static async updateCategory(id: number, payload: { libelle?: string; limite?: number | null; active?: boolean }): Promise<Category> {
+    const response = await fetch(`${API_BASE_URL}/command/references/categories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || "Erreur mise à jour catégorie");
     }
     return response.json();
   }

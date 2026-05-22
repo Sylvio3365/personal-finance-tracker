@@ -30,7 +30,7 @@ public class ReferenceQueryHandler {
     public List<CategoryResponse> listCategories(ListCategoriesQuery query) {
         return categorieRepository.findAll()
                 .stream()
-                .map(c -> new CategoryResponse(c.getIdCategorie(), c.getLibelle(), c.getLimite()))
+                .map(c -> new CategoryResponse(c.getIdCategorie(), c.getLibelle(), c.getLimite(), c.getActive()))
                 .toList();
     }
 

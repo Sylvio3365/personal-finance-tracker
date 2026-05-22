@@ -6,6 +6,8 @@ import com.finance.api.reference.command.CreateTransactionTypeCommand;
 import com.finance.api.reference.command.CreateTypeCompteCommand;
 import com.finance.api.reference.command.ReferenceCommandHandler;
 import com.finance.api.category.dto.CategoryCreateRequest;
+import com.finance.api.category.dto.CategoryUpdateRequest;
+import com.finance.api.category.command.UpdateCategorieCommand;
 import com.finance.api.category.dto.CategoryResponse;
 import com.finance.api.reference.dto.TransactionTypeCreateRequest;
 import com.finance.api.reference.dto.TransactionTypeResponse;
@@ -30,6 +32,11 @@ public class ReferenceCommandController {
     @PostMapping("/categories")
     public CategoryResponse createCategory(@RequestBody CategoryCreateRequest request) {
         return categoryCommandHandler.create(new CreateCategorieCommand(request.getLibelle(), request.getLimite()));
+    }
+
+    @PutMapping("/categories/{id}")
+    public CategoryResponse updateCategory(@PathVariable Long id, @RequestBody CategoryUpdateRequest request) {
+        return categoryCommandHandler.update(new UpdateCategorieCommand(id, request.getLibelle(), request.getLimite(), request.getActive()));
     }
 
     @PostMapping("/types-compte")

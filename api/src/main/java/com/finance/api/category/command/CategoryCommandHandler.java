@@ -17,8 +17,26 @@ public class CategoryCommandHandler {
         Categorie categorie = new Categorie();
         categorie.setLibelle(command.libelle());
         categorie.setLimite(command.limite());
+        categorie.setActive(true);
 
         Categorie saved = categorieRepository.save(categorie);
-        return new CategoryResponse(saved.getIdCategorie(), saved.getLibelle(), saved.getLimite());
+        return new CategoryResponse(saved.getIdCategorie(), saved.getLibelle(), saved.getLimite(), saved.getActive());
+    }
+
+    public CategoryResponse update(UpdateCategorieCommand command) {
+        Categorie categorie = categorieRepository.findById(command.id())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        
+        if (command.libelle() != null) {
+            categorie.setLibelle(command.libelle());
+        }
+        categorie.setLimite(command.limite());
+        
+        if (command.active() != null) {
+            categorie.setActive(command.active());
+        }
+
+        Categorie saved = categorieRepository.save(categorie);
+        return new CategoryResponse(saved.getIdCategorie(), saved.getLibelle(), saved.getLimite(), saved.getActive());
     }
 }
