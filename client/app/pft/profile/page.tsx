@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Load user data on component mount
   useEffect(() => {
     const storedUser = UserService.getStoredUser();
     if (storedUser) {
