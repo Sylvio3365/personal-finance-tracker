@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class UserUpdateRequest {
     private String nom;
+    private String prenom;
     private String email;
     private LocalDate dateNaissance;
 }

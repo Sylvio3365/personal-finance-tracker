@@ -72,8 +72,9 @@ public class ReportQueryHandler {
             BigDecimal total = (BigDecimal) row[2];
             Categorie categorie = categorieRepository.findById(categorieId).orElse(null);
             BigDecimal limite = categorie == null ? null : categorie.getLimite();
+            String icon = categorie == null ? null : categorie.getIcon();
             boolean depassement = limite != null && total.compareTo(limite) > 0;
-            categories.add(new CategorySpendResponse(categorieId, libelle, total, limite, depassement));
+            categories.add(new CategorySpendResponse(categorieId, libelle, icon, total, limite, depassement));
         }
 
         return new MonthlySummaryResponse(

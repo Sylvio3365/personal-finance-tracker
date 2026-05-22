@@ -21,11 +21,17 @@ export default function ModalShell({
       >
         {triggerContent}
       </label>
-      <div className="pointer-events-none fixed inset-0 z-20 flex items-center justify-center bg-black/40 opacity-0 transition peer-checked:pointer-events-auto peer-checked:opacity-100">
-        <div className="w-full max-w-lg rounded-3xl bg-[var(--surface)] text-[var(--foreground)] p-8">
+      <label
+        htmlFor={id}
+        className="pointer-events-none fixed inset-0 z-20 flex items-center justify-center bg-black/40 opacity-0 transition peer-checked:pointer-events-auto peer-checked:opacity-100"
+      >
+        <div
+          className="pointer-events-auto w-full max-w-lg rounded-3xl bg-[var(--surface)] text-[var(--foreground)] p-8"
+          onClick={(e) => e.stopPropagation()}
+        >
           {children}
         </div>
-      </div>
+      </label>
     </div>
   );
 }

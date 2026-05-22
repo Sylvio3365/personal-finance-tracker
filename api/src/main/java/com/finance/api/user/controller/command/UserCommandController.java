@@ -39,6 +39,7 @@ public class UserCommandController {
         UpdateProfileCommand command = new UpdateProfileCommand(
                 userId,
                 request.getNom(),
+                request.getPrenom(),
                 request.getEmail(),
                 request.getDateNaissance()
         );

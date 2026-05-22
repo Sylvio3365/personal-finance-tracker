@@ -9,13 +9,16 @@ export interface MonthlySummary {
 export interface CategorySpending {
   categoryId: number;
   categoryName: string;
+  icon?: string;
   spent: number;
   limit: number;
+  depassement?: boolean;
 }
 
 interface BackendCategorySpendResponse {
   categorieId: number;
   libelle: string;
+  icon?: string;
   totalDepense: number | string;
   limite: number | string | null;
   depassement: boolean;
@@ -84,8 +87,10 @@ export class ReportService {
     return data.depensesParCategorie.map((item) => ({
       categoryId: item.categorieId,
       categoryName: item.libelle,
+      icon: item.icon,
       spent: Number(item.totalDepense) || 0,
       limit: Number(item.limite) || 0,
+      depassement: item.depassement,
     }));
   }
 }

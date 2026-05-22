@@ -8,6 +8,7 @@ import {
   IconRefresh,
   IconCheck,
   IconPlus,
+  IconTag,
 } from "../components/icons";
 import Icon from "@mdi/react";
 import {
@@ -265,6 +266,15 @@ export default function TransactionsList({
       setTransactions(response.data);
       setTotalPages(response.totalPages);
       setTotalItems(response.totalItems);
+
+      // Display warnings for transactions with warnings
+      const transactionsWithWarnings = response.data.filter((tx) => tx.warning);
+      if (transactionsWithWarnings.length > 0) {
+        const warningMessages = transactionsWithWarnings.map((tx) => tx.warning).filter((w): w is string => Boolean(w));
+        if (warningMessages.length > 0) {
+          setToast({ message: warningMessages[0], type: "error" });
+        }
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erreur";
       setToast({ message: errorMessage, type: "error" });
@@ -321,6 +331,13 @@ export default function TransactionsList({
               </span>
             )}
           </h3>
+          <a
+            href="/pft/categories"
+            className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline mt-1"
+          >
+            <IconTag className="h-3 w-3" />
+            Voir liste catégories
+          </a>
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}

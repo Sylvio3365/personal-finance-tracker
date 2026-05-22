@@ -62,6 +62,9 @@ public class UserCommandHandler {
         if (command.nom() != null && !command.nom().isBlank()) {
             utilisateur.setNom(command.nom());
         }
+        if (command.prenom() != null && !command.prenom().isBlank()) {
+            utilisateur.setPrenom(command.prenom());
+        }
         if (command.email() != null && !command.email().isBlank()) {
             utilisateur.setEmail(command.email());
         }

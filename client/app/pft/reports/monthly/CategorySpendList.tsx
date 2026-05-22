@@ -4,6 +4,72 @@ import { useState, useEffect } from "react";
 import { ReportService, CategorySpending } from "../../../services/report/ReportService";
 import { formatCurrency } from "../../../utils/currency";
 import LoadingIndicator from "../../../components/LoadingIndicator";
+import Icon from "@mdi/react";
+import {
+  mdiShopping,
+  mdiHome,
+  mdiCar,
+  mdiSilverwareForkKnife,
+  mdiHeart,
+  mdiBriefcase,
+  mdiSchool,
+  mdiAirplane,
+  mdiPhone,
+  mdiTshirtCrew,
+  mdiLightningBolt,
+  mdiDumbbell,
+  mdiMusic,
+  mdiBook,
+  mdiCoffee,
+  mdiGift,
+  mdiFilmstrip,
+  mdiGamepadVariant,
+  mdiMedicalBag,
+  mdiBabyCarriage,
+  mdiPaw,
+  mdiFood,
+  mdiWallet,
+  mdiHeartPulse,
+  mdiCash,
+  mdiCreditCard,
+  mdiBank,
+  mdiChartLine,
+  mdiTag,
+  mdiSwapHorizontal,
+} from "@mdi/js";
+
+const ICON_MAP: Record<string, string> = {
+  "mdi:shopping": mdiShopping,
+  "mdi:home": mdiHome,
+  "mdi:car": mdiCar,
+  "mdi:silverware-fork-knife": mdiSilverwareForkKnife,
+  "mdi:heart": mdiHeart,
+  "mdi:briefcase": mdiBriefcase,
+  "mdi:school": mdiSchool,
+  "mdi:airplane": mdiAirplane,
+  "mdi:phone": mdiPhone,
+  "mdi:tshirt-crew": mdiTshirtCrew,
+  "mdi:lightning-bolt": mdiLightningBolt,
+  "mdi:dumbbell": mdiDumbbell,
+  "mdi:music": mdiMusic,
+  "mdi:book": mdiBook,
+  "mdi:coffee": mdiCoffee,
+  "mdi:gift": mdiGift,
+  "mdi:filmstrip": mdiFilmstrip,
+  "mdi:gamepad-variant": mdiGamepadVariant,
+  "mdi:medical-bag": mdiMedicalBag,
+  "mdi:baby-carriage": mdiBabyCarriage,
+  "mdi:paw": mdiPaw,
+  "mdi:food": mdiFood,
+  "mdi:wallet": mdiWallet,
+  "mdi:heart-pulse": mdiHeartPulse,
+  "mdi:cash": mdiCash,
+  "mdi:credit-card": mdiCreditCard,
+  "mdi:bank": mdiBank,
+  "mdi:chart-line": mdiChartLine,
+  "mdi:tag": mdiTag,
+  "mdi:swap-horizontal": mdiSwapHorizontal,
+};
 
 export default function CategorySpendList({
   utilisateurId,
@@ -70,17 +136,36 @@ export default function CategorySpendList({
         ) : (
           categories.map((item) => {
             const pct = item.limit > 0 ? Math.min((item.spent / item.limit) * 100, 100) : 0;
+            const isLimitReached = pct >= 100 || item.depassement;
             return (
               <div
                 key={item.categoryId}
                 className="rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{item.categoryName}</p>
-                    <p className="text-xs text-[var(--ink-subtle)]">
-                      {formatCurrency(item.spent)} Ar / {formatCurrency(item.limit)} Ar
-                    </p>
+                  <div className="flex items-center gap-3">
+                    {item.icon && ICON_MAP[item.icon] ? (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 text-[var(--accent)] shadow-sm">
+                        <Icon path={ICON_MAP[item.icon]} size={1} color="var(--accent)" />
+                      </div>
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 text-[var(--accent)] shadow-sm">
+                        <Icon path={mdiTag} size={1} color="var(--accent)" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">{item.categoryName}</p>
+                        {isLimitReached && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">
+                            Limite atteinte
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--ink-subtle)]">
+                        {formatCurrency(item.spent)} Ar / {formatCurrency(item.limit)} Ar
+                      </p>
+                    </div>
                   </div>
                   <p className="text-sm font-semibold">{Math.round(pct)}%</p>
                 </div>

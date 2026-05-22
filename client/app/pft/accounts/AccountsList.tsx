@@ -7,6 +7,7 @@ import {
   IconFilter,
   IconRefresh,
   IconCheck,
+  IconPlus,
 } from "../components/icons";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
@@ -468,6 +469,7 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                     </div>
                     {!isEditing && (
                       <>
+                        
                         <button
                           onClick={() => setEditingAccount(compte)}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ink-subtle)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"

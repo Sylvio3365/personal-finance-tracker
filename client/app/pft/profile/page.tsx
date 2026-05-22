@@ -3,31 +3,53 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "../components/PageHeader";
-import { IconChart } from "../components/icons";
+import { IconChart, IconEye, IconEyeOff } from "../components/icons";
 import { UserService } from "../../services/user/UserService";
 import LoadingIndicator from "../../components/LoadingIndicator";
 import Toast from "../../components/Toast";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: number; fullName: string; email: string; dateNaissance?: string } | null>(null);
+  const [user, setUser] = useState<{ id: number; nom?: string; prenom?: string; email: string; dtn?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const [fullName, setFullName] = useState("");
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [dateNaissance, setDateNaissance] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   useEffect(() => {
     const storedUser = UserService.getStoredUser();
     if (storedUser) {
       setUser(storedUser);
-      setFullName(storedUser.fullName || "");
+      // Split fullName into nom and prenom if available
+      if (storedUser.fullName) {
+        const parts = storedUser.fullName.split(" ");
+        setNom(parts[0] || "");
+        setPrenom(parts.slice(1).join(" ") || "");
+      } else {
+        setNom(storedUser.nom || "");
+        setPrenom(storedUser.prenom || "");
+      }
       setEmail(storedUser.email || "");
-      setDateNaissance(storedUser.dateNaissance || "");
+      // Format date for HTML date input (YYYY-MM-DD)
+      if (storedUser.dtn) {
+        const date = new Date(storedUser.dtn);
+        if (!isNaN(date.getTime())) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          setDateNaissance(`${year}-${month}-${day}`);
+        }
+      }
     } else {
       router.push("/login");
     }
@@ -43,7 +65,8 @@ export default function ProfilePage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nom: fullName,
+          nom: nom,
+          prenom: prenom,
           email: email,
           dateNaissance: dateNaissance || null,
         }),
@@ -90,7 +113,14 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la mise à jour du mot de passe");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || "Erreur lors de la mise à jour du mot de passe";
+        if (errorMessage.includes("Mot de passe actuel incorrect")) {
+          setToast({ message: "Mot de passe incorrect", type: "error" });
+        } else {
+          setToast({ message: errorMessage, type: "error" });
+        }
+        return;
       }
 
       setCurrentPassword("");
@@ -130,11 +160,22 @@ export default function ProfilePage() {
             <h2 className="text-lg font-semibold mb-6">Informations personnelles</h2>
             <form onSubmit={handleUpdateProfile} className="grid gap-4">
               <div className="grid gap-2">
-                <label className="text-sm font-medium">Nom complet</label>
+                <label className="text-sm font-medium">Nom</label>
                 <input
                   type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
+                  className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Prénom</label>
+                <input
+                  type="text"
+                  value={prenom}
+                  onChange={(e) => setPrenom(e.target.value)}
                   className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
                   required
                 />
@@ -177,37 +218,79 @@ export default function ProfilePage() {
             <form onSubmit={handleUpdatePassword} className="grid gap-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Mot de passe actuel</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-12 text-sm outline-none transition focus:border-[var(--accent)]"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--ink-subtle)]/75 hover:text-[var(--ink-subtle)] transition"
+                    aria-label={showCurrentPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showCurrentPassword ? (
+                      <IconEyeOff className="h-5 w-5" />
+                    ) : (
+                      <IconEye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Nouveau mot de passe</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-12 text-sm outline-none transition focus:border-[var(--accent)]"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--ink-subtle)]/75 hover:text-[var(--ink-subtle)] transition"
+                    aria-label={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showNewPassword ? (
+                      <IconEyeOff className="h-5 w-5" />
+                    ) : (
+                      <IconEye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Confirmer le nouveau mot de passe</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-12 text-sm outline-none transition focus:border-[var(--accent)]"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--ink-subtle)]/75 hover:text-[var(--ink-subtle)] transition"
+                    aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showConfirmPassword ? (
+                      <IconEyeOff className="h-5 w-5" />
+                    ) : (
+                      <IconEye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button

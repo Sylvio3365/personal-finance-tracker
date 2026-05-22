@@ -32,6 +32,7 @@ export interface TransactionData {
   transactionTypeLibelle: string;
   utilisateurCompteId: number;
   compteNom: string;
+  warning?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -101,7 +102,7 @@ export class TransactionService {
     }
 
     const data = await response.json() as {
-      data: { id: number; montant: number; dateTransaction: string; note: string; categorieId: number; categorieLibelle: string; categorieIcon?: string; transactionTypeId: number; transactionTypeLibelle: string; utilisateurCompteId: number; compteNom: string }[];
+      data: { id: number; montant: number; dateTransaction: string; note: string; categorieId: number; categorieLibelle: string; categorieIcon?: string; transactionTypeId: number; transactionTypeLibelle: string; utilisateurCompteId: number; compteNom: string; warning?: string }[];
       totalItems: number;
       totalPages: number;
       currentPage: number;
@@ -121,6 +122,7 @@ export class TransactionService {
         transactionTypeLibelle: item.transactionTypeLibelle,
         utilisateurCompteId: item.utilisateurCompteId,
         compteNom: item.compteNom,
+        warning: item.warning,
       })),
       totalItems: data.totalItems,
       totalPages: data.totalPages,
