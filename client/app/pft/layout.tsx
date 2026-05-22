@@ -50,6 +50,14 @@ function UserMenu({ user, onLogout }: { user: { fullName: string }; onLogout: ()
               <p className="text-xs text-[var(--ink-subtle)]">Connecté en tant que</p>
               <p className="text-sm font-semibold text-[var(--foreground)]">{user.fullName}</p>
             </div>
+            <Link
+              href="/pft/profile"
+              onClick={() => setIsOpen(false)}
+              className="w-full text-left px-4 py-3 text-sm text-[var(--foreground)] hover:bg-black/5 dark:hover:bg-white/5 transition flex items-center gap-2"
+            >
+              <IconChart className="h-4 w-4" />
+              Profil
+            </Link>
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -96,8 +104,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const linkBase =
     "transition rounded-full px-3 py-1 text-sm hover:text-[var(--accent)]";
-  const isActive = (path: string) =>
-    pathname === path || pathname.startsWith(`${path}/`);
+  const isActive = (path: string) => {
+    if (path === "/pft") {
+      return pathname === "/pft";
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
     <div className="min-h-screen">
@@ -108,6 +120,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="text-sm font-semibold hidden sm:inline">PFT</span>
           </Link>
           <div className="hidden items-center gap-2 text-[var(--ink-subtle)] md:flex">
+            <Link
+              className={`${linkBase} ${
+                isActive("/pft")
+                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                  : ""
+              }`}
+              href="/pft"
+            >
+              <span className="inline-flex items-center gap-2">
+                <IconChart className="h-4 w-4" />
+                Dashboard
+              </span>
+            </Link>
             <Link
               className={`${linkBase} ${
                 isActive("/pft/accounts")
@@ -147,19 +172,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 Categories
               </span>
             </Link>
-            <Link
-              className={`${linkBase} ${
-                isActive("/pft/reports")
-                  ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
-                  : ""
-              }`}
-              href="/pft/reports"
-            >
-              <span className="inline-flex items-center gap-2">
-                <IconChart className="h-4 w-4" />
-                Rapports
-              </span>
-            </Link>
             {/* Separator + User Menu */}
             <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
             <UserMenu user={user} onLogout={handleLogout} />
@@ -175,6 +187,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {isMenuOpen ? (
           <div className="border-t border-black/5 bg-[var(--surface)] px-6 py-4 sm:px-10 md:hidden">
             <div className="grid gap-2">
+              <Link
+                className={`${linkBase} ${
+                  isActive("/pft")
+                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
+                    : ""
+                }`}
+                href="/pft"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <IconChart className="h-4 w-4" />
+                  Dashboard
+                </span>
+              </Link>
               <Link
                 className={`${linkBase} ${
                   isActive("/pft/accounts")
@@ -215,20 +241,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="inline-flex items-center gap-2">
                   <IconTag className="h-4 w-4" />
                   Categories
-                </span>
-              </Link>
-              <Link
-                className={`${linkBase} ${
-                  isActive("/pft/reports")
-                    ? "bg-[#f3efe6] dark:bg-white/10 text-[var(--accent)]"
-                    : ""
-                }`}
-                href="/pft/reports"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <IconChart className="h-4 w-4" />
-                  Rapports
                 </span>
               </Link>
               {/* Separator + User Menu */}

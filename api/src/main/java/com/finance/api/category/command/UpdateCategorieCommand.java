@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record UpdateCategorieCommand(
     Long id,
     String libelle,
+    String icon,
     BigDecimal limite,
     Boolean active
 ) {}

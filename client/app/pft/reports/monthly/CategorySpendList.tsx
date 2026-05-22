@@ -12,7 +12,7 @@ export default function CategorySpendList({
   month,
 }: {
   utilisateurId: number;
-  compteId: number;
+  compteId: number | null;
   year: number;
   month: number;
 }) {

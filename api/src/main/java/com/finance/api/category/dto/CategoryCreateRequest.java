@@ -9,5 +9,6 @@ import java.math.BigDecimal;
 @Setter
 public class CategoryCreateRequest {
     private String libelle;
+    private String icon;
     private BigDecimal limite;
 }

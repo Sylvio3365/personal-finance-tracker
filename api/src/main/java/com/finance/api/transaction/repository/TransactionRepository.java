@@ -57,23 +57,56 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                         @Param("categorieId") Long categorieId,
                         @Param("transactionTypeId") Long transactionTypeId);
 
+        @Query("select t from Transaction t " +
+                        "where t.utilisateurCompte.utilisateur.idUtilisateur = :utilisateurId " +
+                        "and (:compteId is null or t.utilisateurCompte.idUtilisateurCompte = :compteId) " +
+                        "and (:categorieId is null or t.categorie.idCategorie = :categorieId) " +
+                        "and (:transactionTypeId is null or t.transactionType.idTransactionType = :transactionTypeId) " +
+                        "and (:minMontant is null or t.montant >= :minMontant) " +
+                        "and (:maxMontant is null or t.montant <= :maxMontant) " +
+                        "order by t.dateTransaction desc")
+        Page<Transaction> findFilteredWithMontant(
+                        @Param("utilisateurId") Long utilisateurId,
+                        @Param("compteId") Long compteId,
+                        @Param("categorieId") Long categorieId,
+                        @Param("transactionTypeId") Long transactionTypeId,
+                        @Param("minMontant") BigDecimal minMontant,
+                        @Param("maxMontant") BigDecimal maxMontant,
+                        Pageable pageable);
+
         @Query("select coalesce(sum(t.montant), 0) from Transaction t " +
                         "where t.utilisateurCompte.idUtilisateurCompte = :compteId " +
                         "and t.dateTransaction between :start and :end " +
-                        "and lower(t.transactionType.libelle) = lower(:typeLibelle)")
+                        "and t.transactionType.idTransactionType = :typeId")
         BigDecimal sumByCompteAndTypeBetween(
                         @Param("compteId") Long compteId,
-                        @Param("typeLibelle") String typeLibelle,
+                        @Param("typeId") Long typeId,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
+
+        @Query("select coalesce(sum(t.montant), 0) from Transaction t " +
+                        "where t.dateTransaction between :start and :end " +
+                        "and t.transactionType.idTransactionType = :typeId")
+        BigDecimal sumByTypeBetween(
+                        @Param("typeId") Long typeId,
                         @Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
 
         @Query("select t.categorie.idCategorie, t.categorie.libelle, sum(t.montant) from Transaction t " +
                         "where t.utilisateurCompte.idUtilisateurCompte = :compteId " +
                         "and t.dateTransaction between :start and :end " +
-                        "and lower(t.transactionType.libelle) = 'depense' " +
+                        "and t.transactionType.idTransactionType = 2 " +
                         "group by t.categorie.idCategorie, t.categorie.libelle")
         List<Object[]> sumDepenseByCategorie(
                         @Param("compteId") Long compteId,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
+
+        @Query("select t.categorie.idCategorie, t.categorie.libelle, sum(t.montant) from Transaction t " +
+                        "where t.dateTransaction between :start and :end " +
+                        "and t.transactionType.idTransactionType = 2 " +
+                        "group by t.categorie.idCategorie, t.categorie.libelle")
+        List<Object[]> sumDepenseByCategorieAll(
                         @Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
 
@@ -81,7 +114,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                         "where t.utilisateurCompte.idUtilisateurCompte = :compteId " +
                         "and t.categorie.idCategorie = :categorieId " +
                         "and t.dateTransaction between :start and :end " +
-                        "and lower(t.transactionType.libelle) = 'depense'")
+                        "and t.transactionType.idTransactionType = 2")
         BigDecimal sumDepenseByCategorieBetween(
                         @Param("compteId") Long compteId,
                         @Param("categorieId") Long categorieId,
@@ -92,7 +125,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Query("select coalesce(sum(t.montant), 0) from Transaction t " +
                         "where t.categorie.idCategorie = :categorieId " +
                         "and t.dateTransaction between :start and :end " +
-                        "and lower(t.transactionType.libelle) = 'depense'")
+                        "and t.transactionType.idTransactionType = 2")
         BigDecimal sumDepenseByCategorieBetweenAllAccounts(
                         @Param("categorieId") Long categorieId,
                         @Param("start") LocalDateTime start,

@@ -12,7 +12,7 @@ export default function SummaryCards({
   month,
 }: {
   utilisateurId: number;
-  compteId: number;
+  compteId: number | null;
   year: number;
   month: number;
 }) {
@@ -60,7 +60,11 @@ export default function SummaryCards({
     },
     {
       label: "Total dépenses",
-      value: summary ? `−${formatCurrency(summary.totalDepense)}` : "0,00",
+      value: summary
+        ? summary.totalDepense === 0
+          ? "0,00"
+          : `−${formatCurrency(summary.totalDepense)}`
+        : "0,00",
       color: "text-red-600 dark:text-red-400",
     },
     {

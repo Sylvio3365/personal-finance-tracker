@@ -31,12 +31,12 @@ public class ReferenceCommandController {
 
     @PostMapping("/categories")
     public CategoryResponse createCategory(@RequestBody CategoryCreateRequest request) {
-        return categoryCommandHandler.create(new CreateCategorieCommand(request.getLibelle(), request.getLimite()));
+        return categoryCommandHandler.create(new CreateCategorieCommand(request.getLibelle(), request.getIcon(), request.getLimite()));
     }
 
     @PutMapping("/categories/{id}")
     public CategoryResponse updateCategory(@PathVariable Long id, @RequestBody CategoryUpdateRequest request) {
-        return categoryCommandHandler.update(new UpdateCategorieCommand(id, request.getLibelle(), request.getLimite(), request.getActive()));
+        return categoryCommandHandler.update(new UpdateCategorieCommand(id, request.getLibelle(), request.getIcon(), request.getLimite(), request.getActive()));
     }
 
     @PostMapping("/types-compte")

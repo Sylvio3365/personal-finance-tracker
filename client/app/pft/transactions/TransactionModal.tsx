@@ -9,6 +9,7 @@ import { AccountService, AccountResponse } from "../../services/account/AccountS
 import { ReferenceService, Category, TransactionType } from "../../services/reference/ReferenceService";
 import { TransactionService } from "../../services/transaction/TransactionService";
 import { UserService } from "../../services/user/UserService";
+import CustomSelect from "../components/CustomSelect";
 
 interface TransactionModalProps {
   onTransactionCreated?: () => void;
@@ -159,41 +160,36 @@ export default function TransactionModal({ onTransactionCreated }: TransactionMo
         {/* Compte — CustomSelect */}
         <label className="grid gap-2 text-sm font-medium">
           Compte
-          <select
+          <CustomSelect
             value={compteId}
-            onChange={(e) => setCompteId(e.target.value)}
-            required
-            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-          >
-            <option value="">Sélectionner un compte</option>
-            {comptes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-          </select>
+            onChange={setCompteId}
+            options={[
+              { label: "Sélectionner un compte", value: "" },
+              ...comptes.map(c => ({ label: c.nom, value: c.id.toString() }))
+            ]}
+          />
         </label>
         <div className="grid grid-cols-2 gap-4">
           {/* Type */}
           <label className="grid gap-2 text-sm font-medium">
             Type
-            <select
+            <CustomSelect
               value={typeId}
-              onChange={(e) => setTypeId(e.target.value)}
-              required
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {types.map(t => <option key={t.id} value={t.id}>{t.libelle}</option>)}
-            </select>
+              onChange={setTypeId}
+              options={types.map(t => ({ label: t.libelle, value: t.id.toString() }))}
+            />
           </label>
           {/* Catégorie */}
           <label className="grid gap-2 text-sm font-medium">
             Categorie
-            <select
+            <CustomSelect
               value={categorieId}
-              onChange={(e) => setCategorieId(e.target.value)}
-              required
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              <option value="">Sélectionner</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.libelle}</option>)}
-            </select>
+              onChange={setCategorieId}
+              options={[
+                { label: "Sélectionner", value: "" },
+                ...categories.map(c => ({ label: c.libelle, value: c.id.toString() }))
+              ]}
+            />
           </label>
         </div>
         <div className="grid grid-cols-2 gap-4">

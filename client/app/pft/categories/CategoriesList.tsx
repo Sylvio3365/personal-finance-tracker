@@ -1,7 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { IconList, IconPlus, IconTag } from "../components/icons";
+import Icon from "@mdi/react";
+import {
+  mdiShopping,
+  mdiHome,
+  mdiCar,
+  mdiSilverwareForkKnife,
+  mdiHeart,
+  mdiBriefcase,
+  mdiSchool,
+  mdiAirplane,
+  mdiPhone,
+  mdiTshirtCrew,
+  mdiLightningBolt,
+  mdiDumbbell,
+  mdiMusic,
+  mdiBook,
+  mdiCoffee,
+  mdiGift,
+  mdiFilmstrip,
+  mdiGamepadVariant,
+  mdiMedicalBag,
+  mdiBabyCarriage,
+  mdiPaw,
+  mdiFood,
+  mdiWallet,
+  mdiHeartPulse,
+  mdiCash,
+  mdiCreditCard,
+  mdiBank,
+  mdiChartLine,
+  mdiTag,
+} from "@mdi/js";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
 import ModalShell from "../components/ModalShell";
@@ -12,6 +44,40 @@ import {
 } from "../../services/reference/ReferenceService";
 import { TransactionService } from "../../services/transaction/TransactionService";
 import { formatCurrency } from "../../utils/currency";
+
+const ICON_MAP: Record<string, string> = {
+  "mdi:shopping": mdiShopping,
+  "mdi:home": mdiHome,
+  "mdi:car": mdiCar,
+  "mdi:silverware-fork-knife": mdiSilverwareForkKnife,
+  "mdi:heart": mdiHeart,
+  "mdi:briefcase": mdiBriefcase,
+  "mdi:school": mdiSchool,
+  "mdi:airplane": mdiAirplane,
+  "mdi:phone": mdiPhone,
+  "mdi:tshirt-crew": mdiTshirtCrew,
+  "mdi:lightning-bolt": mdiLightningBolt,
+  "mdi:dumbbell": mdiDumbbell,
+  "mdi:music": mdiMusic,
+  "mdi:book": mdiBook,
+  "mdi:coffee": mdiCoffee,
+  "mdi:gift": mdiGift,
+  "mdi:filmstrip": mdiFilmstrip,
+  "mdi:gamepad-variant": mdiGamepadVariant,
+  "mdi:medical-bag": mdiMedicalBag,
+  "mdi:baby-carriage": mdiBabyCarriage,
+  "mdi:paw": mdiPaw,
+  "mdi:food": mdiFood,
+  "mdi:wallet": mdiWallet,
+  "mdi:heart-pulse": mdiHeartPulse,
+  "mdi:cash": mdiCash,
+  "mdi:credit-card": mdiCreditCard,
+  "mdi:bank": mdiBank,
+  "mdi:chart-line": mdiChartLine,
+  "mdi:tag": mdiTag,
+};
+
+const ICON_OPTIONS = Object.keys(ICON_MAP);
 
 export default function CategoriesList() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -25,12 +91,15 @@ export default function CategoriesList() {
     Record<number, number>
   >({});
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadCategories = async () => {
     try {
       setLoading(true);
       const data = await ReferenceService.getCategories();
       setCategories(data);
+      setCurrentPage(1);
 
       const spending: Record<number, number> = {};
       for (const cat of data) {
@@ -94,6 +163,11 @@ export default function CategoriesList() {
     }
   };
 
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCategories = categories.slice(startIndex, endIndex);
+
   if (loading && categories.length === 0)
     return <LoadingIndicator text="Chargement des catégories..." />;
 
@@ -107,7 +181,7 @@ export default function CategoriesList() {
         />
       )}
 
-      <div className="flex justify-end gap-4">
+      <div className="mb-8 flex justify-end gap-4">
         {/* Modal Création */}
         <ModalShell
           id="category-modal"
@@ -131,15 +205,17 @@ export default function CategoriesList() {
 
       {/* Modal Edition */}
       {editingCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-[#f8f6f2] dark:bg-[#1a1d1e] p-6 shadow-xl">
-            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-4">
-              <h2 className="text-lg font-semibold">Modifier la catégorie</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-[#f8f6f2] dark:bg-[#1a1d1e] p-8 shadow-2xl shadow-black/20">
+            <div className="flex items-center justify-between pb-6">
+              <h2 className="text-xl font-semibold text-[var(--foreground)]">Modifier la catégorie</h2>
               <button
                 onClick={() => setEditingCategory(null)}
-                className="text-sm text-[var(--ink-subtle)] hover:text-[var(--foreground)]"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--ink-subtle)] transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--foreground)]"
               >
-                Fermer
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             <CategoryFormInline
@@ -155,16 +231,16 @@ export default function CategoriesList() {
       )}
 
       {/* Tableau des catégories */}
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#1a1d1e]">
+      <div className="overflow-hidden rounded-3xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#1a1d1e] shadow-xl shadow-black/5">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]">
+          <thead className="border-b border-black/5 dark:border-white/5 bg-gradient-to-b from-black/[0.02] to-transparent dark:from-white/[0.02]">
             <tr>
-              <th className="p-4 font-semibold">Icône</th>
-              <th className="p-4 font-semibold">Catégorie</th>
-              <th className="p-4 font-semibold text-right">Dépenses</th>
-              <th className="p-4 font-semibold text-right">Limite</th>
-              <th className="p-4 font-semibold text-center">Statut</th>
-              <th className="p-4 font-semibold text-right">Actions</th>
+              <th className="px-6 py-4 font-semibold text-[var(--ink-subtle)]">Icône</th>
+              <th className="px-6 py-4 font-semibold text-[var(--ink-subtle)]">Catégorie</th>
+              <th className="px-6 py-4 font-semibold text-right text-[var(--ink-subtle)]">Dépenses</th>
+              <th className="px-6 py-4 font-semibold text-right text-[var(--ink-subtle)]">Limite</th>
+              <th className="px-6 py-4 font-semibold text-center text-[var(--ink-subtle)]">Statut</th>
+              <th className="px-6 py-4 font-semibold text-center text-[var(--ink-subtle)]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -172,13 +248,18 @@ export default function CategoriesList() {
               <tr>
                 <td
                   colSpan={6}
-                  className="p-8 text-center text-[var(--ink-subtle)]"
+                  className="px-6 py-16 text-center"
                 >
-                  Aucune catégorie. Créez votre première catégorie.
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/10">
+                      <IconTag className="h-8 w-8 text-[var(--ink-subtle)]" />
+                    </div>
+                    <p className="text-[var(--ink-subtle)]">Aucune catégorie. Créez votre première catégorie.</p>
+                  </div>
                 </td>
               </tr>
             ) : (
-              categories.map((cat) => {
+              paginatedCategories.map((cat) => {
                 const limite = cat.limite ?? 0;
                 const spent = categorySpending[cat.id] ?? 0;
                 const isLimitExceeded = limite > 0 && spent >= limite;
@@ -186,52 +267,59 @@ export default function CategoriesList() {
                 return (
                   <tr
                     key={cat.id}
-                    className="border-b border-black/5 dark:border-white/5 last:border-0 hover:bg-black/[0.01] dark:hover:bg-white/[0.01]"
+                    className="border-b border-black/5 dark:border-white/5 last:border-0 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                   >
-                    <td className="p-4">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/5 dark:bg-white/10 text-[var(--accent)]">
-                        <IconList className="h-4 w-4" />
+                    <td className="px-6 py-4">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 text-[var(--accent)] shadow-sm">
+                        {cat.icon && ICON_MAP[cat.icon] ? (
+                          <Icon path={ICON_MAP[cat.icon]} size={1.25} color="var(--accent)" />
+                        ) : (
+                          <IconList className="h-5 w-5" />
+                        )}
                       </span>
                     </td>
-                    <td className="p-4">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div>
-                          <p className="font-medium">{cat.libelle}</p>
+                          <p className="font-semibold text-[var(--foreground)]">{cat.libelle}</p>
                           {isLimitExceeded && (
-                            <span className="inline-block px-2 py-0.5 mt-1 rounded-full text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">
+                            <span className="inline-flex items-center gap-1.5 mt-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
                               Limite atteinte
                             </span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-6 py-4 text-right font-medium text-[var(--foreground)]">
                       {formatCurrency(spent)} Ar
                     </td>
-                    <td className="p-4 text-right text-[var(--ink-subtle)]">
+                    <td className="px-6 py-4 text-right text-[var(--ink-subtle)]">
                       {limite > 0 ? `${formatCurrency(limite)} Ar` : "—"}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleToggleActive(cat)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        className={`relative inline-flex h-7 w-13 items-center rounded-full transition-all duration-200 ${
                           cat.active
-                            ? "bg-[var(--accent)]"
-                            : "bg-black/20 dark:bg-white/20"
+                            ? "bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/30"
+                            : "bg-black/15 dark:bg-white/15"
                         }`}
                         title={cat.active ? "Désactiver" : "Activer"}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            cat.active ? "translate-x-6" : "translate-x-1"
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                            cat.active ? "translate-x-7" : "translate-x-1"
                           }`}
                         />
                       </button>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => setEditingCategory(cat)}
-                        className="p-2 text-[var(--ink-subtle)] hover:text-[var(--accent)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ink-subtle)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
                         title="Modifier"
                       >
                         <svg
@@ -256,7 +344,79 @@ export default function CategoriesList() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-[var(--ink-subtle)]">
+            Affichage {startIndex + 1}-{Math.min(endIndex, categories.length)} sur {categories.length}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 dark:border-white/10 text-[var(--ink-subtle)] transition-all hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all ${
+                  currentPage === page
+                    ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/30"
+                    : "border border-black/10 dark:border-white/10 text-[var(--ink-subtle)] hover:bg-black/5 dark:hover:bg-white/5"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 dark:border-white/10 text-[var(--ink-subtle)] transition-all hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </>
+  );
+}
+
+// ── Icon Picker Component ───────────────────────────────────
+function IconPicker({ selectedIcon, onSelect }: { selectedIcon?: string; onSelect: (icon: string) => void }) {
+  return (
+    <div className="grid grid-cols-7 gap-2">
+      {ICON_OPTIONS.map((iconName) => {
+        const iconPath = ICON_MAP[iconName];
+        return (
+          <button
+            key={iconName}
+            type="button"
+            onClick={() => onSelect(iconName)}
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
+              selectedIcon === iconName
+                ? "bg-[var(--accent)] shadow-lg shadow-[var(--accent)]/30"
+                : "bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15"
+            }`}
+            title={iconName}
+          >
+            <Icon
+              path={iconPath}
+              size={1.25}
+              color={selectedIcon === iconName ? "white" : "var(--ink-subtle)"}
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -271,6 +431,7 @@ function CategoryFormInline({
   initialData?: Category;
 }) {
   const [nom, setNom] = useState(initialData?.libelle || "");
+  const [icon, setIcon] = useState(initialData?.icon || "");
   const [limite, setLimite] = useState(
     initialData?.limite ? initialData.limite.toString() : "",
   );
@@ -282,7 +443,7 @@ function CategoryFormInline({
     setSaving(true);
     setError("");
     try {
-      const payload: any = { libelle: nom };
+      const payload: any = { libelle: nom, icon };
       if (limite.trim() !== "") {
         const val = parseFloat(limite.replace(",", "."));
         if (isNaN(val) || val < 0) {
@@ -300,6 +461,7 @@ function CategoryFormInline({
       } else {
         await ReferenceService.createCategory(payload);
         setNom("");
+        setIcon("");
         setLimite("");
       }
 
@@ -317,41 +479,52 @@ function CategoryFormInline({
   };
 
   return (
-    <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-      <label className="grid gap-2 text-sm font-medium">
-        Nom de la categorie
+    <form className="grid gap-5" onSubmit={handleSubmit}>
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-[var(--foreground)]">Nom de la catégorie</label>
         <input
           type="text"
           placeholder="Ex: Nourriture"
           value={nom}
           onChange={(e) => setNom(e.target.value)}
           required
-          className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+          className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] px-4 text-sm text-[var(--foreground)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         />
-      </label>
-      <label className="grid gap-2 text-sm font-medium">
-        Limite mensuelle (optionnel)
+      </div>
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-[var(--foreground)]">Icône</label>
+        <IconPicker selectedIcon={icon} onSelect={setIcon} />
+      </div>
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-[var(--foreground)]">Limite mensuelle (optionnel)</label>
         <input
           type="text"
           placeholder="0,00"
           value={limite}
           onChange={(e) => setLimite(e.target.value)}
-          className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+          className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] px-4 text-sm text-[var(--foreground)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         />
-      </label>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      </div>
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-xs text-red-600 dark:bg-red-500/10 dark:text-red-400">
+          <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {error}
+        </div>
+      )}
       <button
         type="submit"
         disabled={saving}
-        className="mt-2 h-11 rounded-2xl bg-[var(--accent)] text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+        className="mt-2 h-12 w-full rounded-2xl bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-lg shadow-[var(--accent)]/20 transition-all hover:brightness-110 hover:shadow-xl hover:shadow-[var(--accent)]/30 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {saving
           ? "Enregistrement..."
           : initialData
             ? "Modifier"
-            : "Ajouter la categorie"}
+            : "Ajouter la catégorie"}
       </button>
-      <div className="flex items-center gap-2 text-xs text-[var(--ink-subtle)]">
+      <div className="flex items-center gap-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] px-4 py-3 text-xs text-[var(--ink-subtle)]">
         <IconTag className="h-4 w-4" />
         Les limites servent à générer un avertissement lors des dépenses.
       </div>

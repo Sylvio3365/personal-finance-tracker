@@ -8,6 +8,7 @@ import CategorySpendList from "./CategorySpendList";
 import { UserService } from "../../../services/user/UserService";
 import { AccountService, AccountResponse } from "../../../services/account/AccountService";
 import LoadingIndicator from "../../../components/LoadingIndicator";
+import CustomSelect from "../../components/CustomSelect";
 
 export default function MonthlyReportPage() {
   const [user, setUser] = useState<{ id: number } | null>(null);
@@ -60,46 +61,39 @@ export default function MonthlyReportPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="grid gap-2">
             <label className="text-sm font-medium">Compte</label>
-            <select
-              value={selectedAccount || ""}
-              onChange={(e) => setSelectedAccount(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              <option value="">Choisir un compte</option>
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.nom}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedAccount?.toString() || ""}
+              onChange={(v) => setSelectedAccount(v ? Number(v) : null)}
+              options={[
+                { label: "Choisir un compte", value: "" },
+                ...accounts.map((acc) => ({
+                  label: acc.nom,
+                  value: acc.id.toString(),
+                })),
+              ]}
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Année</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedYear.toString()}
+              onChange={(v) => setSelectedYear(Number(v))}
+              options={years.map((y) => ({
+                label: y.toString(),
+                value: y.toString(),
+              }))}
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Mois</label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {new Date(2000, m - 1).toLocaleDateString("fr-FR", { month: "long" })}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedMonth.toString()}
+              onChange={(v) => setSelectedMonth(Number(v))}
+              options={months.map((m) => ({
+                label: new Date(2000, m - 1).toLocaleDateString("fr-FR", { month: "long" }),
+                value: m.toString(),
+              }))}
+            />
           </div>
         </div>
 

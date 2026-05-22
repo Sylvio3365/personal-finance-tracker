@@ -10,6 +10,7 @@ import {
   TypeCompte,
 } from "../../services/account/AccountService";
 import { UserService } from "../../services/user/UserService";
+import CustomSelect from "../components/CustomSelect";
 
 interface AccountModalProps {
   onAccountCreated?: () => void;
@@ -116,19 +117,17 @@ export default function AccountModal({ onAccountCreated }: AccountModalProps) {
           </label>
           <label className="grid gap-2 text-sm font-medium">
             Type
-            <select
+            <CustomSelect
               value={typeCompteId}
-              onChange={(e) => setTypeCompteId(e.target.value)}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-              required
-            >
-              <option value="">Sélectionnez un type</option>
-              {typeComptes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.nom}
-                </option>
-              ))}
-            </select>
+              onChange={setTypeCompteId}
+              options={[
+                { label: "Sélectionnez un type", value: "" },
+                ...typeComptes.map((type) => ({
+                  label: type.nom,
+                  value: type.id.toString(),
+                })),
+              ]}
+            />
           </label>
           <label className="grid gap-2 text-sm font-medium">
             Solde initial

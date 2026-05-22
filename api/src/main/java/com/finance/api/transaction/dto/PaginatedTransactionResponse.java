@@ -24,6 +24,7 @@ public class PaginatedTransactionResponse {
         private String note;
         private Long categorieId;
         private String categorieLibelle;
+        private String categorieIcon;
         private Long transactionTypeId;
         private String transactionTypeLibelle;
         private Long utilisateurCompteId;

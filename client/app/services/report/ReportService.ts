@@ -34,12 +34,20 @@ interface BackendMonthlySummaryResponse {
 export class ReportService {
   static async getMonthlySummary(
     utilisateurId: number,
-    compteId: number,
+    compteId: number | null,
     year: number,
     month: number
   ): Promise<MonthlySummary> {
+    const params = new URLSearchParams({
+      utilisateurId: utilisateurId.toString(),
+      annee: year.toString(),
+      mois: month.toString(),
+    });
+    if (compteId !== null) {
+      params.append("compteId", compteId.toString());
+    }
     const response = await fetch(
-      `${API_BASE_URL}/query/reports/monthly-summary?utilisateurId=${utilisateurId}&compteId=${compteId}&annee=${year}&mois=${month}`
+      `${API_BASE_URL}/query/reports/monthly-summary?${params.toString()}`
     );
     if (!response.ok) {
       throw new Error("Erreur lors du chargement du résumé mensuel");
@@ -54,12 +62,20 @@ export class ReportService {
 
   static async getCategorySpendingForMonth(
     utilisateurId: number,
-    compteId: number,
+    compteId: number | null,
     year: number,
     month: number
   ): Promise<CategorySpending[]> {
+    const params = new URLSearchParams({
+      utilisateurId: utilisateurId.toString(),
+      annee: year.toString(),
+      mois: month.toString(),
+    });
+    if (compteId !== null) {
+      params.append("compteId", compteId.toString());
+    }
     const response = await fetch(
-      `${API_BASE_URL}/query/reports/monthly-summary?utilisateurId=${utilisateurId}&compteId=${compteId}&annee=${year}&mois=${month}`
+      `${API_BASE_URL}/query/reports/monthly-summary?${params.toString()}`
     );
     if (!response.ok) {
       throw new Error("Erreur lors du chargement des dépenses par catégorie");

@@ -8,14 +8,15 @@ import CategorySpendList from "./reports/monthly/CategorySpendList";
 import { UserService } from "../services/user/UserService";
 import { AccountService, AccountResponse } from "../services/account/AccountService";
 import LoadingIndicator from "../components/LoadingIndicator";
+import CustomSelect from "./components/CustomSelect";
 
 export default function DashboardPage() {
     const [user, setUser] = useState<{ id: number } | null>(null);
     const [accounts, setAccounts] = useState<AccountResponse[]>([]);
-    const [tempAccount, setTempAccount] = useState<number | null>(null);
+    const [tempAccount, setTempAccount] = useState<string>("all");
     const [tempYear, setTempYear] = useState(new Date().getFullYear());
     const [tempMonth, setTempMonth] = useState(new Date().getMonth() + 1);
-    const [selectedAccount, setSelectedAccount] = useState<number | null>(null);
+    const [selectedAccount, setSelectedAccount] = useState<string>("all");
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [loading, setLoading] = useState(false);
@@ -35,8 +36,10 @@ export default function DashboardPage() {
             setAccounts(data);
 
             if (data.length > 0) {
-                setTempAccount(data[0].id);
-                setSelectedAccount(data[0].id);
+                setTempAccount("all");
+                setSelectedAccount("all");
+                setSelectedYear(new Date().getFullYear());
+                setSelectedMonth(new Date().getMonth() + 1);
             }
         } catch (error) {
             console.error("Erreur chargement comptes:", error);
@@ -70,48 +73,41 @@ export default function DashboardPage() {
                 <div className="mt-8 grid gap-4 sm:grid-cols-4 items-end">
                     <div className="grid gap-2">
                         <label className="text-sm font-medium">Compte</label>
-                        <select
-                            value={tempAccount || ""}
-                            onChange={(e) => setTempAccount(Number(e.target.value))}
-                            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                        >
-                            <option value="">Choisir un compte</option>
-                            {accounts.map((account) => (
-                                <option key={account.id} value={account.id}>
-                                    {account.nom}
-                                </option>
-                            ))}
-                        </select>
+                        <CustomSelect
+                            value={tempAccount}
+                            onChange={setTempAccount}
+                            options={[
+                                { label: "Tous les comptes", value: "all" },
+                                ...accounts.map((account) => ({
+                                    label: account.nom,
+                                    value: account.id.toString(),
+                                })),
+                            ]}
+                        />
                     </div>
 
                     <div className="grid gap-2">
                         <label className="text-sm font-medium">Année</label>
-                        <select
-                            value={tempYear}
-                            onChange={(e) => setTempYear(Number(e.target.value))}
-                            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                        >
-                            {years.map((year) => (
-                                <option key={year} value={year}>
-                                    {year}
-                                </option>
-                            ))}
-                        </select>
+                        <CustomSelect
+                            value={tempYear.toString()}
+                            onChange={(v) => setTempYear(Number(v))}
+                            options={years.map((year) => ({
+                                label: year.toString(),
+                                value: year.toString(),
+                            }))}
+                        />
                     </div>
 
                     <div className="grid gap-2">
                         <label className="text-sm font-medium">Mois</label>
-                        <select
-                            value={tempMonth}
-                            onChange={(e) => setTempMonth(Number(e.target.value))}
-                            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-                        >
-                            {months.map((month) => (
-                                <option key={month} value={month}>
-                                    {new Date(2000, month - 1).toLocaleDateString("fr-FR", { month: "long" })}
-                                </option>
-                            ))}
-                        </select>
+                        <CustomSelect
+                            value={tempMonth.toString()}
+                            onChange={(v) => setTempMonth(Number(v))}
+                            options={months.map((month) => ({
+                                label: new Date(2000, month - 1).toLocaleDateString("fr-FR", { month: "long" }),
+                                value: month.toString(),
+                            }))}
+                        />
                     </div>
 
                     <div>
@@ -124,17 +120,17 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {selectedAccount && user ? (
+                {user ? (
                     <>
                         <SummaryCards
                             utilisateurId={user.id}
-                            compteId={selectedAccount}
+                            compteId={selectedAccount === "all" ? null : Number(selectedAccount)}
                             year={selectedYear}
                             month={selectedMonth}
                         />
                         <CategorySpendList
                             utilisateurId={user.id}
-                            compteId={selectedAccount}
+                            compteId={selectedAccount === "all" ? null : Number(selectedAccount)}
                             year={selectedYear}
                             month={selectedMonth}
                         />

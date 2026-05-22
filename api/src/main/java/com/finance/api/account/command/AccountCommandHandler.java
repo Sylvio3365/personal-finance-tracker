@@ -68,6 +68,21 @@ public class AccountCommandHandler {
         compteRepository.delete(compte);
     }
 
+    public AccountResponse update(UpdateCompteCommand command) {
+        UtilisateurCompte compte = compteRepository.findById(command.compteId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compte introuvable"));
+
+        compte.setNom(command.nom());
+        UtilisateurCompte saved = compteRepository.save(compte);
+        return new AccountResponse(
+                saved.getIdUtilisateurCompte(),
+                saved.getNom(),
+                parseSolde(saved.getSoldeActuel()),
+                saved.getTypeCompte().getIdTypeCompte(),
+                saved.getUtilisateur().getIdUtilisateur()
+        );
+    }
+
     private BigDecimal parseSolde(String solde) {
         if (solde == null || solde.isBlank()) {
             return BigDecimal.ZERO;

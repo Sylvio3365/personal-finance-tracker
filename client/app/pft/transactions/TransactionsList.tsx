@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   IconWallet,
   IconTrash,
@@ -9,6 +9,38 @@ import {
   IconCheck,
   IconPlus,
 } from "../components/icons";
+import Icon from "@mdi/react";
+import {
+  mdiShopping,
+  mdiHome,
+  mdiCar,
+  mdiSilverwareForkKnife,
+  mdiHeart,
+  mdiBriefcase,
+  mdiSchool,
+  mdiAirplane,
+  mdiPhone,
+  mdiTshirtCrew,
+  mdiLightningBolt,
+  mdiDumbbell,
+  mdiMusic,
+  mdiBook,
+  mdiCoffee,
+  mdiGift,
+  mdiFilmstrip,
+  mdiGamepadVariant,
+  mdiMedicalBag,
+  mdiBabyCarriage,
+  mdiPaw,
+  mdiFood,
+  mdiWallet,
+  mdiHeartPulse,
+  mdiCash,
+  mdiCreditCard,
+  mdiBank,
+  mdiChartLine,
+  mdiTag,
+} from "@mdi/js";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
 import {
@@ -23,37 +55,44 @@ import {
 } from "../../services/transaction/TransactionService";
 import { UserService } from "../../services/user/UserService";
 import { formatCurrency } from "../../utils/currency";
+import { ReferenceService, Category } from "../../services/reference/ReferenceService";
 
 interface TransactionsListProps {
   refreshTrigger?: number;
 }
 
-// ── Palette de couleurs par catégorie ──
-const CATEGORY_COLORS: Record<string, string> = {
-  Alimentation:
-    "bg-orange-100 text-orange-700  dark:bg-orange-500/20    dark:text-orange-400",
-  Transport:
-    "bg-sky-100    text-sky-700     dark:bg-sky-500/20       dark:text-sky-400",
-  Loisirs:
-    "bg-pink-100   text-pink-700    dark:bg-pink-500/20      dark:text-pink-400",
-  Santé:
-    "bg-red-100    text-red-700     dark:bg-red-500/20       dark:text-red-400",
-  Factures:
-    "bg-indigo-100 text-indigo-700  dark:bg-indigo-500/20    dark:text-indigo-400",
-  Logement:
-    "bg-violet-100 text-violet-700  dark:bg-violet-500/20    dark:text-violet-400",
-  Éducation:
-    "bg-lime-100   text-lime-700    dark:bg-lime-500/20      dark:text-lime-400",
-  Voyage:
-    "bg-cyan-100   text-cyan-700    dark:bg-cyan-500/20      dark:text-cyan-400",
+// ── Icon Map ──
+const ICON_MAP: Record<string, string> = {
+  "mdi:shopping": mdiShopping,
+  "mdi:home": mdiHome,
+  "mdi:car": mdiCar,
+  "mdi:silverware-fork-knife": mdiSilverwareForkKnife,
+  "mdi:heart": mdiHeart,
+  "mdi:briefcase": mdiBriefcase,
+  "mdi:school": mdiSchool,
+  "mdi:airplane": mdiAirplane,
+  "mdi:phone": mdiPhone,
+  "mdi:tshirt-crew": mdiTshirtCrew,
+  "mdi:lightning-bolt": mdiLightningBolt,
+  "mdi:dumbbell": mdiDumbbell,
+  "mdi:music": mdiMusic,
+  "mdi:book": mdiBook,
+  "mdi:coffee": mdiCoffee,
+  "mdi:gift": mdiGift,
+  "mdi:filmstrip": mdiFilmstrip,
+  "mdi:gamepad-variant": mdiGamepadVariant,
+  "mdi:medical-bag": mdiMedicalBag,
+  "mdi:baby-carriage": mdiBabyCarriage,
+  "mdi:paw": mdiPaw,
+  "mdi:food": mdiFood,
+  "mdi:wallet": mdiWallet,
+  "mdi:heart-pulse": mdiHeartPulse,
+  "mdi:cash": mdiCash,
+  "mdi:credit-card": mdiCreditCard,
+  "mdi:bank": mdiBank,
+  "mdi:chart-line": mdiChartLine,
+  "mdi:tag": mdiTag,
 };
-
-function getCategoryColor(libelle: string): string {
-  return (
-    CATEGORY_COLORS[libelle] ||
-    "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400"
-  );
-}
 
 function getTypeAmountColor(libelle: string): string {
   return libelle.toLowerCase() === "revenu"
@@ -166,6 +205,7 @@ export default function TransactionsList({
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [comptes, setComptes] = useState<AccountResponse[]>([]);
   const [typesCompte, setTypesCompte] = useState<TypeCompte[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -196,6 +236,9 @@ export default function TransactionsList({
     }
     if (typesCompte.length === 0) {
       setTypesCompte(await AccountService.getTypeComptes());
+    }
+    if (categories.length === 0) {
+      setCategories(await ReferenceService.getCategories());
     }
   };
 
@@ -354,11 +397,47 @@ export default function TransactionsList({
                 }
                 options={[
                   { label: "Toutes les catégories", value: "" },
-                  ...Object.keys(CATEGORY_COLORS).map((cat) => ({
-                    label: cat,
-                    value: cat,
+                  ...categories.map((cat) => ({
+                    label: cat.libelle,
+                    value: cat.id.toString(),
                   })),
                 ]}
+              />
+            </label>
+
+            {/* Montant minimum */}
+            <label className="grid gap-2 text-sm font-medium">
+              Montant minimum (Ar)
+              <input
+                type="text"
+                inputMode="decimal"
+                value={tempFilters.minMontant ? tempFilters.minMontant.toString() : ""}
+                onChange={(e) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    minMontant: e.target.value ? parseFloat(e.target.value.replace(",", ".")) : undefined,
+                  })
+                }
+                placeholder="0,00"
+                className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+              />
+            </label>
+
+            {/* Montant maximum */}
+            <label className="grid gap-2 text-sm font-medium">
+              Montant maximum (Ar)
+              <input
+                type="text"
+                inputMode="decimal"
+                value={tempFilters.maxMontant ? tempFilters.maxMontant.toString() : ""}
+                onChange={(e) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    maxMontant: e.target.value ? parseFloat(e.target.value.replace(",", ".")) : undefined,
+                  })
+                }
+                placeholder="999999,99"
+                className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
               />
             </label>
           </div>
@@ -405,14 +484,15 @@ export default function TransactionsList({
                   className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium leading-tight ${getCategoryColor(
-                        tx.categorieLibelle,
-                      )}`}
-                    >
-                      {tx.categorieLibelle}
-                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/5 text-[var(--accent)] shadow-sm">
+                      {tx.categorieIcon && ICON_MAP[tx.categorieIcon] ? (
+                        <Icon path={ICON_MAP[tx.categorieIcon]} size={1} color="var(--accent)" />
+                      ) : (
+                        <IconWallet className="h-4 w-4" />
+                      )}
+                    </div>
                     <div className="flex flex-col">
+                      <span className="text-sm font-medium text-[var(--foreground)]">{tx.categorieLibelle}</span>
                       <span className="text-xs text-[var(--ink-subtle)] flex items-center gap-1">
                         <IconWallet className="h-3 w-3" />
                         {getCompteName(tx.utilisateurCompteId)}
