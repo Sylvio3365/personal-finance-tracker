@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconMail } from "../../components/icons";
-import PasswordInput from "../../components/PasswordInput";
+import { IconMail, IconLock, IconEye, IconEyeOff } from "../../components/icons";
 import Toast from "../../components/Toast";
 import { UserService } from "../../services/user";
 
@@ -13,17 +12,18 @@ export default function LoginPage() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("jean.dupont@test.com");
+  const [password, setPassword] = useState("password123");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("loading");
 
-    const formData = new FormData(event.currentTarget);
-
     try {
       const userData = await UserService.login({
-        email: String(formData.get("email") || "").trim(),
-        password: String(formData.get("password") || ""),
+        email: email.trim(),
+        password: password,
       });
 
       UserService.storeUser(userData);
@@ -63,7 +63,6 @@ export default function LoginPage() {
             objectifs.
           </p>
         </header>
-
         <section className="rounded-3xl border border-black/5 bg-[var(--surface)] p-8 shadow-[0_24px_70px_-40px_var(--shadow)]">
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <label className="grid gap-2 text-sm font-medium">
@@ -74,18 +73,44 @@ export default function LoginPage() {
                 </span>
                 <input
                   type="email"
-                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="vous@exemple.com"
                   className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] pl-12 pr-4 text-sm outline-none transition focus:border-[var(--accent)]"
                   required
+                  autoComplete="off"
                 />
               </div>
             </label>
-            <PasswordInput
-              name="password"
-              placeholder="Votre mot de passe"
-              required
-            />
+            <label className="grid gap-2 text-sm font-medium">
+              Mot de passe
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-[var(--ink-subtle)]/75">
+                  <IconLock className="h-5 w-5" />
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Votre mot de passe"
+                  className="h-12 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] pl-12 pr-12 text-sm outline-none transition focus:border-[var(--accent)]"
+                  required
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--ink-subtle)]/75 hover:text-[var(--ink-subtle)] transition"
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showPassword ? (
+                    <IconEyeOff className="h-5 w-5" />
+                  ) : (
+                    <IconEye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </label>
             <div className="flex items-center justify-between text-xs text-[var(--ink-subtle)]">
               <label className="flex items-center gap-2">
                 <input

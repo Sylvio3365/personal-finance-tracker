@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { IconWallet, IconTrash, IconFilter, IconRefresh, IconCheck } from "../components/icons";
+import {
+  IconWallet,
+  IconTrash,
+  IconFilter,
+  IconRefresh,
+  IconCheck,
+} from "../components/icons";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
-import { AccountService, AccountResponse, TypeCompte } from "../../services/account/AccountService";
+import {
+  AccountService,
+  AccountResponse,
+  TypeCompte,
+} from "../../services/account/AccountService";
 import { UserService } from "../../services/user/UserService";
+import { formatCurrency } from "../../utils/currency";
 
 interface AccountsListProps {
   refreshTrigger?: number;
@@ -14,19 +25,30 @@ interface AccountsListProps {
 interface Filters {
   typeCompteId?: number;
   searchTerm?: string;
+  minSolde?: number;
+  maxSolde?: number;
 }
+
+// Formatage des nombres avec séparateurs de milliers
+
 
 // Couleurs par type de compte (hardcodées, ne touche pas au thème global)
 const TYPE_COLORS: Record<string, string> = {
-  "Courant":       "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  "Epargne":       "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
-  "Cash":          "bg-amber-100 text-amber-700  dark:bg-amber-500/20  dark:text-amber-400",
-  "Crédit":        "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400",
-  "Investissement":"bg-teal-100 text-teal-700    dark:bg-teal-500/20    dark:text-teal-400",
+  Courant: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+  Epargne:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+  Cash: "bg-amber-100 text-amber-700  dark:bg-amber-500/20  dark:text-amber-400",
+  Crédit:
+    "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400",
+  Investissement:
+    "bg-teal-100 text-teal-700    dark:bg-teal-500/20    dark:text-teal-400",
 };
 
 function getTypeColor(nom: string): string {
-  return TYPE_COLORS[nom] || "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400";
+  return (
+    TYPE_COLORS[nom] ||
+    "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400"
+  );
 }
 
 /**
@@ -46,7 +68,8 @@ function CustomSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label || placeholder;
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label || placeholder;
 
   return (
     <div className="relative" ref={ref}>
@@ -55,7 +78,9 @@ function CustomSelect({
         onClick={() => setOpen((p) => !p)}
         className="h-11 w-full rounded-2xl border border-[var(--accent)]/30 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-10 text-sm outline-none transition-all duration-200 hover:border-[var(--accent)]/60 hover:bg-[var(--accent)]/5 dark:hover:bg-[var(--accent)]/10 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 cursor-pointer text-left flex items-center justify-between"
       >
-        <span className={`truncate ${!value ? "text-[var(--ink-subtle)]" : ""}`}>
+        <span
+          className={`truncate ${!value ? "text-[var(--ink-subtle)]" : ""}`}
+        >
           {selectedLabel}
         </span>
         <svg
@@ -93,7 +118,15 @@ function CustomSelect({
                   >
                     <span>{opt.label}</span>
                     {selected && (
-                      <svg className="h-4 w-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        className="h-4 w-4 text-[var(--accent)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
@@ -112,7 +145,10 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
   const [typeComptes, setTypeComptes] = useState<TypeCompte[]>([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,13 +176,13 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
         setTypeComptes(types);
       }
 
-      const userId = parseInt(user.id as string, 10);
+      const userId = parseInt(String(user.id), 10);
 
       const response = await AccountService.listByUtilisateurWithFilters(
         userId,
         currentPage,
         itemsPerPage,
-        activeFilters
+        activeFilters,
       );
 
       setAccounts(response.data);
@@ -197,7 +233,7 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
   };
 
   const getTypeCompteName = (typeId: number): string => {
-    const type = typeComptes.find(t => t.id === typeId);
+    const type = typeComptes.find((t) => t.id === typeId);
     return type?.nom || "Type inconnu";
   };
 
@@ -209,7 +245,11 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
   return (
     <>
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* ── Header + bouton Filtrer ── */}
@@ -259,7 +299,10 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                 }
                 options={[
                   { label: "Tous les types", value: "" },
-                  ...typeComptes.map((t) => ({ label: t.nom, value: t.id.toString() })),
+                  ...typeComptes.map((t) => ({
+                    label: t.nom,
+                    value: t.id.toString(),
+                  })),
                 ]}
               />
             </label>
@@ -277,6 +320,42 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                   })
                 }
                 placeholder="Nom du compte..."
+                className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+              />
+            </label>
+
+            {/* Solde minimum */}
+            <label className="grid gap-2 text-sm font-medium">
+              Solde minimum (Ar)
+              <input
+                type="text"
+                inputMode="decimal"
+                value={tempFilters.minSolde ? tempFilters.minSolde.toString() : ""}
+                onChange={(e) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    minSolde: e.target.value ? parseFloat(e.target.value.replace(",", ".")) : undefined,
+                  })
+                }
+                placeholder="0,00"
+                className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
+              />
+            </label>
+
+            {/* Solde maximum */}
+            <label className="grid gap-2 text-sm font-medium">
+              Solde maximum (Ar)
+              <input
+                type="text"
+                inputMode="decimal"
+                value={tempFilters.maxSolde ? tempFilters.maxSolde.toString() : ""}
+                onChange={(e) =>
+                  setTempFilters({
+                    ...tempFilters,
+                    maxSolde: e.target.value ? parseFloat(e.target.value.replace(",", ".")) : undefined,
+                  })
+                }
+                placeholder="999999,99"
                 className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
               />
             </label>
@@ -335,9 +414,11 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="text-sm font-semibold">
-                        {compte.soldeActuel.toFixed(2)} Ar
+                        {formatCurrency(compte.soldeActuel)} Ar
                       </p>
-                      <p className="text-[11px] text-[var(--ink-subtle)]">Solde actuel</p>
+                      <p className="text-[11px] text-[var(--ink-subtle)]">
+                        Solde actuel
+                      </p>
                     </div>
                     <button
                       onClick={() => handleDelete(compte.id)}

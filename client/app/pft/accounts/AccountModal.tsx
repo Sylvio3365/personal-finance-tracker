@@ -5,7 +5,10 @@ import ModalShell from "../components/ModalShell";
 import ModalHeader from "../components/ModalHeader";
 import { IconPlus, IconWallet } from "../components/icons";
 import Toast from "../../components/Toast";
-import { AccountService, TypeCompte } from "../../services/account/AccountService";
+import {
+  AccountService,
+  TypeCompte,
+} from "../../services/account/AccountService";
 import { UserService } from "../../services/user/UserService";
 
 interface AccountModalProps {
@@ -15,8 +18,11 @@ interface AccountModalProps {
 export default function AccountModal({ onAccountCreated }: AccountModalProps) {
   const [typeComptes, setTypeComptes] = useState<TypeCompte[]>([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
   const [nom, setNom] = useState("");
   const [typeCompteId, setTypeCompteId] = useState("");
   const [soldeInitial, setSoldeInitial] = useState("");
@@ -47,12 +53,14 @@ export default function AccountModal({ onAccountCreated }: AccountModalProps) {
         return;
       }
 
-      const solde = soldeInitial ? parseFloat(soldeInitial.replace(",", ".")) : 0;
+      const solde = soldeInitial
+        ? parseFloat(soldeInitial.replace(",", "."))
+        : 0;
 
       await AccountService.create({
         nom,
         typeCompteId: parseInt(typeCompteId, 10),
-        utilisateurId: parseInt(user.id as string, 10),
+        utilisateurId: parseInt(String(user.id), 10),
         soldeInitial: solde,
       });
 
@@ -60,9 +68,10 @@ export default function AccountModal({ onAccountCreated }: AccountModalProps) {
       setNom("");
       setTypeCompteId("");
       setSoldeInitial("");
-      
-      // Fermer la modal et rafraîchir
-      const modal = document.getElementById("account-modal") as HTMLInputElement;
+
+      const modal = document.getElementById(
+        "account-modal",
+      ) as HTMLInputElement;
       if (modal) modal.checked = false;
       onAccountCreated?.();
     } catch (error) {
@@ -84,7 +93,7 @@ export default function AccountModal({ onAccountCreated }: AccountModalProps) {
       )}
       <ModalShell
         id="account-modal"
-        title="Vos comptes"
+        title=""
         triggerContent={
           <>
             <IconPlus className="h-4 w-4" />

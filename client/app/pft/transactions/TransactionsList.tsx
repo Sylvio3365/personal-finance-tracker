@@ -1,12 +1,28 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { IconWallet, IconTrash, IconFilter, IconRefresh, IconCheck, IconPlus } from "../components/icons";
+import {
+  IconWallet,
+  IconTrash,
+  IconFilter,
+  IconRefresh,
+  IconCheck,
+  IconPlus,
+} from "../components/icons";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
-import { AccountService, AccountResponse, TypeCompte } from "../../services/account/AccountService";
-import { TransactionService, TransactionData, TransactionFilters } from "../../services/transaction/TransactionService";
+import {
+  AccountService,
+  AccountResponse,
+  TypeCompte,
+} from "../../services/account/AccountService";
+import {
+  TransactionService,
+  TransactionData,
+  TransactionFilters,
+} from "../../services/transaction/TransactionService";
 import { UserService } from "../../services/user/UserService";
+import { formatCurrency } from "../../utils/currency";
 
 interface TransactionsListProps {
   refreshTrigger?: number;
@@ -14,22 +30,35 @@ interface TransactionsListProps {
 
 // ── Palette de couleurs par catégorie ──
 const CATEGORY_COLORS: Record<string, string> = {
-  Alimentation:    "bg-orange-100 text-orange-700  dark:bg-orange-500/20    dark:text-orange-400",
-  Transport:       "bg-sky-100    text-sky-700     dark:bg-sky-500/20       dark:text-sky-400",
-  Loisirs:         "bg-pink-100   text-pink-700    dark:bg-pink-500/20      dark:text-pink-400",
-  Santé:           "bg-red-100    text-red-700     dark:bg-red-500/20       dark:text-red-400",
-  Factures:        "bg-indigo-100 text-indigo-700  dark:bg-indigo-500/20    dark:text-indigo-400",
-  Logement:        "bg-violet-100 text-violet-700  dark:bg-violet-500/20    dark:text-violet-400",
-  Éducation:       "bg-lime-100   text-lime-700    dark:bg-lime-500/20      dark:text-lime-400",
-  Voyage:          "bg-cyan-100   text-cyan-700    dark:bg-cyan-500/20      dark:text-cyan-400",
+  Alimentation:
+    "bg-orange-100 text-orange-700  dark:bg-orange-500/20    dark:text-orange-400",
+  Transport:
+    "bg-sky-100    text-sky-700     dark:bg-sky-500/20       dark:text-sky-400",
+  Loisirs:
+    "bg-pink-100   text-pink-700    dark:bg-pink-500/20      dark:text-pink-400",
+  Santé:
+    "bg-red-100    text-red-700     dark:bg-red-500/20       dark:text-red-400",
+  Factures:
+    "bg-indigo-100 text-indigo-700  dark:bg-indigo-500/20    dark:text-indigo-400",
+  Logement:
+    "bg-violet-100 text-violet-700  dark:bg-violet-500/20    dark:text-violet-400",
+  Éducation:
+    "bg-lime-100   text-lime-700    dark:bg-lime-500/20      dark:text-lime-400",
+  Voyage:
+    "bg-cyan-100   text-cyan-700    dark:bg-cyan-500/20      dark:text-cyan-400",
 };
 
 function getCategoryColor(libelle: string): string {
-  return CATEGORY_COLORS[libelle] || "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400";
+  return (
+    CATEGORY_COLORS[libelle] ||
+    "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400"
+  );
 }
 
 function getTypeAmountColor(libelle: string): string {
-  return libelle.toLowerCase() === "revenu" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
+  return libelle.toLowerCase() === "revenu"
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-red-600 dark:text-red-400";
 }
 
 function formatDate(dateStr: string): string {
@@ -58,7 +87,8 @@ function CustomSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label || placeholder;
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label || placeholder;
 
   return (
     <div className="relative" ref={ref}>
@@ -67,7 +97,9 @@ function CustomSelect({
         onClick={() => setOpen((p) => !p)}
         className="h-11 w-full rounded-2xl border border-[var(--accent)]/30 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 pr-10 text-sm outline-none transition-all duration-200 hover:border-[var(--accent)]/60 hover:bg-[var(--accent)]/5 dark:hover:bg-[var(--accent)]/10 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 cursor-pointer text-left flex items-center justify-between"
       >
-        <span className={`truncate ${!value ? "text-[var(--ink-subtle)]" : ""}`}>
+        <span
+          className={`truncate ${!value ? "text-[var(--ink-subtle)]" : ""}`}
+        >
           {selectedLabel}
         </span>
         <svg
@@ -105,7 +137,15 @@ function CustomSelect({
                   >
                     <span>{opt.label}</span>
                     {selected && (
-                      <svg className="h-4 w-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        className="h-4 w-4 text-[var(--accent)]"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
@@ -120,12 +160,17 @@ function CustomSelect({
   );
 }
 
-export default function TransactionsList({ refreshTrigger }: TransactionsListProps) {
+export default function TransactionsList({
+  refreshTrigger,
+}: TransactionsListProps) {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [comptes, setComptes] = useState<AccountResponse[]>([]);
   const [typesCompte, setTypesCompte] = useState<TypeCompte[]>([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -144,7 +189,9 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
     if (!user) return;
 
     if (comptes.length === 0) {
-      const raw = await AccountService.listByUtilisateur(parseInt(user.id as string, 10));
+      const raw = await AccountService.listByUtilisateur(
+        parseInt(String(user.id), 10),
+      );
       setComptes(raw);
     }
     if (typesCompte.length === 0) {
@@ -164,12 +211,12 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
         return;
       }
 
-      const userId = parseInt(user.id as string, 10);
+      const userId = parseInt(String(user.id), 10);
       const response = await TransactionService.listPaginated(
         userId,
         currentPage,
         itemsPerPage,
-        activeFilters
+        activeFilters,
       );
 
       setTransactions(response.data);
@@ -213,7 +260,11 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
   return (
     <>
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* ── Header + bouton Filtrer ── */}
@@ -263,7 +314,10 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
                 }
                 options={[
                   { label: "Tous les comptes", value: "" },
-                  ...comptes.map((c) => ({ label: c.nom, value: c.id.toString() })),
+                  ...comptes.map((c) => ({
+                    label: c.nom,
+                    value: c.id.toString(),
+                  })),
                 ]}
               />
             </label>
@@ -300,7 +354,10 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
                 }
                 options={[
                   { label: "Toutes les catégories", value: "" },
-                  ...Object.keys(CATEGORY_COLORS).map((cat) => ({ label: cat, value: cat })),
+                  ...Object.keys(CATEGORY_COLORS).map((cat) => ({
+                    label: cat,
+                    value: cat,
+                  })),
                 ]}
               />
             </label>
@@ -337,8 +394,11 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
         <>
           <div className="grid gap-3">
             {transactions.map((tx) => {
-              const isRevenu = tx.transactionTypeLibelle.toLowerCase() === "revenu";
-              const amountColor = isRevenu ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
+              const isRevenu =
+                tx.transactionTypeLibelle.toLowerCase() === "revenu";
+              const amountColor = isRevenu
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-600 dark:text-red-400";
               return (
                 <div
                   key={tx.id}
@@ -347,7 +407,7 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
                   <div className="flex items-center gap-3">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium leading-tight ${getCategoryColor(
-                        tx.categorieLibelle
+                        tx.categorieLibelle,
                       )}`}
                     >
                       {tx.categorieLibelle}
@@ -365,9 +425,11 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className={`text-sm font-semibold whitespace-nowrap ${amountColor}`}>
+                    <span
+                      className={`text-sm font-semibold whitespace-nowrap ${amountColor}`}
+                    >
                       {isRevenu ? "+" : "-"}
-                      {Math.abs(tx.montant).toFixed(2)} Ar
+                      {formatCurrency(Math.abs(tx.montant))}
                     </span>
                     <span className="text-[11px] text-[var(--ink-subtle)] whitespace-nowrap">
                       {formatDate(tx.dateTransaction)}
@@ -423,7 +485,9 @@ export default function TransactionsList({ refreshTrigger }: TransactionsListPro
                   })}
                 </div>
                 <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="px-3 py-1.5 rounded-lg text-sm border border-black/10 dark:border-white/10 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/5 transition"
                 >

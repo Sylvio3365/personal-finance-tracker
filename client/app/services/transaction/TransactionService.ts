@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface CreateTransactionPayload {
   montant: number;
@@ -141,5 +141,29 @@ export class TransactionService {
     const response = await fetch(`${API_BASE_URL}/query/transactions/filter?${params.toString()}`);
     if (!response.ok) throw new Error("Erreur lors du chargement des transactions");
     return response.json();
+  }
+
+  // Get spending sum by category for current month
+  static async getSumDepenseByCategory(categoryId: number, compteId?: number): Promise<number> {
+    const url = new URL(`${API_BASE_URL}/query/transactions/sum-depense-categorie`);
+    url.searchParams.append("categorieId", categoryId.toString());
+    if (compteId) {
+      url.searchParams.append("compteId", compteId.toString());
+    }
+
+    try {
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        console.error(`Failed to get sum for category ${categoryId}:`, response.status);
+        return 0;
+      }
+      const data = await response.json() as { sum: number | string };
+      // Handle both number and string (BigDecimal might be stringified)
+      const sum = typeof data.sum === "string" ? parseFloat(data.sum) : data.sum;
+      return isNaN(sum) ? 0 : sum;
+    } catch (error) {
+      console.error(`Error fetching spending sum for category ${categoryId}:`, error);
+      return 0;
+    }
   }
 }

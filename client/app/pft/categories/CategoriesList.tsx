@@ -7,6 +7,8 @@ import LoadingIndicator from "../../components/LoadingIndicator";
 import ModalShell from "../components/ModalShell";
 import ModalHeader from "../components/ModalHeader";
 import { ReferenceService, Category } from "../../services/reference/ReferenceService";
+import { TransactionService } from "../../services/transaction/TransactionService";
+import { formatCurrency } from "../../utils/currency";
 
 // ── Barre de limite visuelle ──────────────────────────────
 function LimitBar({ current, limit }: { current: number; limit: number }) {
@@ -17,10 +19,19 @@ function LimitBar({ current, limit }: { current: number; limit: number }) {
     pct >= 80 ? "bg-orange-500" :
     pct >= 50 ? "bg-amber-400" :
                 "bg-emerald-500";
-
   return (
-    <div className="mt-2 h-1.5 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
-      <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+    <div className="mt-2">
+      <div className="relative h-6 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden flex items-center">
+        <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-sm">
+          {Math.round(pct)}%
+        </span>
+      </div>
+      <div className="flex items-center justify-between mt-1.5">
+        <span className="text-xs text-[var(--ink-subtle)]">
+          {formatCurrency(current)} / {formatCurrency(limit)}
+        </span>
+      </div>
     </div>
   );
 }
@@ -30,12 +41,26 @@ export default function CategoriesList() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [categorySpending, setCategorySpending] = useState<Record<number, number>>({}); // Map categoryId -> spent amount
 
   const loadCategories = async () => {
     try {
       setLoading(true);
       const data = await ReferenceService.getCategories();
       setCategories(data);
+      
+      // Load spending for each category
+      const spending: Record<number, number> = {};
+      for (const cat of data) {
+        try {
+          const sum = await TransactionService.getSumDepenseByCategory(cat.id);
+          spending[cat.id] = sum;
+        } catch (error) {
+          console.warn(`Failed to load spending for category ${cat.id}:`, error);
+          spending[cat.id] = 0;
+        }
+      }
+      setCategorySpending(spending);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Erreur";
       setToast({ message: msg, type: "error" });
@@ -50,8 +75,7 @@ export default function CategoriesList() {
     if (!confirm("Supprimer cette catégorie ?")) return;
     try {
       setDeletingId(id);
-      // Soft-delete visuel (l'API ne propose pas de DELETE sur categories dans les endpoints actuels)
-      await fetch(`http://localhost:8080/command/references/categories/${id}`, { method: "DELETE" }).catch(() => {});
+      await ReferenceService.deleteCategory(id);
       setCategories((prev) => prev.filter((c) => c.id !== id));
       setToast({ message: "Catégorie supprimée", type: "success" });
     } catch (error) {
@@ -68,13 +92,23 @@ export default function CategoriesList() {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Bouton Nouvelle catégorie (inline) ── */}
-      <div className="mt-6 flex justify-end">
-        <label htmlFor="category-modal" className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--accent)] text-white text-sm font-semibold cursor-pointer transition hover:brightness-95 active:scale-[0.98]">
-          <IconPlus className="h-4 w-4" />
-          Nouvelle categorie
-        </label>
-      </div>
+      {/* ── Modal + Bouton ── */}
+      <ModalShell
+        id="category-modal"
+        title="Categories actives"
+        triggerContent={
+          <>
+            <IconPlus className="h-4 w-4" />
+            Nouvelle categorie
+          </>
+        }
+      >
+        <ModalHeader title="Ajouter une catégorie" closeId="category-modal" />
+        <CategoryFormInline
+          onCreated={() => { loadCategories(); }}
+          closeId="category-modal"
+        />
+      </ModalShell>
 
       {/* ── Liste ── */}
       <div className="mt-4 grid gap-4">
@@ -84,7 +118,8 @@ export default function CategoriesList() {
 
         {categories.map((cat) => {
           const limite = cat.limite ?? 0;
-          const isOver = limite > 0;
+          const spent = categorySpending[cat.id] ?? 0;
+          const isLimitExceeded = limite > 0 && spent >= limite;
 
           return (
             <div
@@ -98,18 +133,18 @@ export default function CategoriesList() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{cat.libelle}</p>
-                    {isOver && (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
-                        Limite mensuelle
+                    {isLimitExceeded && (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">
+                        Limite atteinte
                       </span>
                     )}
                   </div>
-                  {isOver && <LimitBar current={0} limit={limite} />}
+                  {limite > 0 && <LimitBar current={spent} limit={limite} />}
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <p className="text-sm font-semibold whitespace-nowrap">{limite > 0 ? `${limite.toFixed(2)} Ar` : "—"}</p>
+                <p className="text-sm font-semibold whitespace-nowrap">{limite > 0 ? `${formatCurrency(limite)} Ar` : "—"}</p>
                 <button
                   onClick={() => handleDelete(cat.id)}
                   disabled={deletingId === cat.id}
@@ -123,23 +158,6 @@ export default function CategoriesList() {
           );
         })}
       </div>
-
-      {/* ── Modal de création ───────────────────────────── */}
-      <ModalShell
-        id="category-modal"
-        title="Categories actives"
-        triggerContent={
-          <>
-            <IconPlus className="h-4 w-4" />
-            Nouvelle categorie
-          </>
-        }
-      >
-        <CategoryFormInline
-          onCreated={() => { loadCategories(); }}
-          closeId="category-modal"
-        />
-      </ModalShell>
     </>
   );
 }
@@ -168,15 +186,7 @@ function CategoryFormInline({
         if (isNaN(val) || val < 0) { setError("Limite invalide"); setSaving(false); return; }
         payload.limite = val;
       }
-      const res = await fetch("http://localhost:8080/command/references/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "Erreur création");
-      }
+      await ReferenceService.createCategory(payload);
       setNom("");
       setLimite("");
       onCreated();

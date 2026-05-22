@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -112,5 +115,20 @@ public class TransactionQueryHandler {
                 t.getUtilisateurCompte().getIdUtilisateurCompte(),
                 null
         );
+    }
+
+    // ── Calculate spending sum for a category in current month ───
+    public BigDecimal getSumDepenseByCategorie(Long categorieId, Long compteId) {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDateTime start = currentMonth.atDay(1).atStartOfDay();
+        LocalDateTime end = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+
+        if (compteId != null) {
+            // Specific account
+            return transactionRepository.sumDepenseByCategorieBetween(compteId, categorieId, start, end);
+        } else {
+            // All accounts
+            return transactionRepository.sumDepenseByCategorieBetweenAllAccounts(categorieId, start, end);
+        }
     }
 }

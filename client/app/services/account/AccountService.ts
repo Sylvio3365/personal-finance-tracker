@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface TypeCompte {
   id: number;
@@ -31,10 +31,12 @@ export interface PaginatedResponse<T> {
 export interface AccountFilters {
   typeCompteId?: number;
   searchTerm?: string;
+  minSolde?: number;
+  maxSolde?: number;
 }
 
 export class AccountService {
-  // Query operations
+
   static async getTypeComptes(): Promise<TypeCompte[]> {
     const response = await fetch(`${API_BASE_URL}/query/references/types-compte`);
     if (!response.ok) {
@@ -61,7 +63,6 @@ export class AccountService {
     return response.json();
   }
 
-  // Liste avec pagination + filtres → appel au nouveau endpoint backend /filter
   static async listByUtilisateurWithFilters(
     utilisateurId: number,
     page: number = 1,
@@ -80,6 +81,14 @@ export class AccountService {
 
     if (filters.searchTerm && filters.searchTerm.trim() !== '') {
       params.append('searchTerm', filters.searchTerm.trim());
+    }
+
+    if (filters.minSolde !== undefined && filters.minSolde !== null) {
+      params.append('minSolde', filters.minSolde.toString());
+    }
+
+    if (filters.maxSolde !== undefined && filters.maxSolde !== null) {
+      params.append('maxSolde', filters.maxSolde.toString());
     }
 
     const response = await fetch(`${API_BASE_URL}/query/comptes/filter?${params.toString()}`);
@@ -111,7 +120,6 @@ export class AccountService {
     };
   }
 
-  // Command operations
   static async create(payload: CreateAccountPayload): Promise<AccountResponse> {
     const response = await fetch(`${API_BASE_URL}/command/comptes`, {
       method: "POST",

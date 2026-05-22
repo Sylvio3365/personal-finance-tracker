@@ -28,7 +28,6 @@ public class AccountQueryHandler {
         return map(compte);
     }
 
-    // --- Sans filtre, sans pagination (existant) ---
     public List<AccountResponse> listByUtilisateur(ListComptesByUtilisateurQuery query) {
         return compteRepository.findByUtilisateur_IdUtilisateur(query.utilisateurId())
                 .stream()
@@ -36,7 +35,6 @@ public class AccountQueryHandler {
                 .toList();
     }
 
-    // --- Avec filtre + pagination (nouveau) ---
     public PaginatedAccountResponse listByUtilisateurFiltered(ListComptesByUtilisateurFilteredQuery query) {
         int page = query.page() != null && query.page() > 0 ? query.page() - 1 : 0;
         int limit = query.limit() != null && query.limit() > 0 ? query.limit() : 10;
@@ -44,25 +42,53 @@ public class AccountQueryHandler {
 
         Page<UtilisateurCompte> result;
 
-        // Cas 1 : filtre par type de compte seulement
-        if (query.typeCompteId() != null && (query.searchTerm() == null || query.searchTerm().isBlank())) {
-            result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompte(
-                    query.utilisateurId(), query.typeCompteId(), pageable);
-        }
-        // Cas 2 : filtre par recherche texte seulement
-        else if (query.searchTerm() != null && !query.searchTerm().isBlank()
-                && query.typeCompteId() == null) {
-            result = compteRepository.findByUtilisateur_IdUtilisateurAndNomContainingIgnoreCase(
-                    query.utilisateurId(), query.searchTerm(), pageable);
-        }
-        // Cas 3 : filtre combiné (type + recherche)
-        else if (query.typeCompteId() != null && query.searchTerm() != null && !query.searchTerm().isBlank()) {
-            result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompteAndNomContainingIgnoreCase(
-                    query.utilisateurId(), query.typeCompteId(), query.searchTerm(), pageable);
-        }
-        // Cas 4 : pas de filtre → tous les comptes paginés
-        else {
-            result = compteRepository.findByUtilisateur_IdUtilisateur(query.utilisateurId(), pageable);
+        if (query.minSolde() != null || query.maxSolde() != null) {
+
+            if (query.typeCompteId() != null && (query.searchTerm() == null || query.searchTerm().isBlank())) {
+
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompteAndSoldeBetween(
+                        query.utilisateurId(), query.typeCompteId(),
+                        query.minSolde() != null ? query.minSolde() : BigDecimal.ZERO,
+                        query.maxSolde() != null ? query.maxSolde() : new BigDecimal(Long.MAX_VALUE),
+                        pageable);
+            } else if (query.searchTerm() != null && !query.searchTerm().isBlank() && query.typeCompteId() == null) {
+
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndNomContainingIgnoreCaseAndSoldeBetween(
+                        query.utilisateurId(), query.searchTerm(),
+                        query.minSolde() != null ? query.minSolde() : BigDecimal.ZERO,
+                        query.maxSolde() != null ? query.maxSolde() : new BigDecimal(Long.MAX_VALUE),
+                        pageable);
+            } else if (query.typeCompteId() != null && query.searchTerm() != null && !query.searchTerm().isBlank()) {
+
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompteAndNomContainingIgnoreCaseAndSoldeBetween(
+                        query.utilisateurId(), query.typeCompteId(), query.searchTerm(),
+                        query.minSolde() != null ? query.minSolde() : BigDecimal.ZERO,
+                        query.maxSolde() != null ? query.maxSolde() : new BigDecimal(Long.MAX_VALUE),
+                        pageable);
+            } else {
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndSoldeBetween(
+                        query.utilisateurId(),
+                        query.minSolde() != null ? query.minSolde() : BigDecimal.ZERO,
+                        query.maxSolde() != null ? query.maxSolde() : new BigDecimal(Long.MAX_VALUE),
+                        pageable);
+            }
+        } else {
+            if (query.typeCompteId() != null && (query.searchTerm() == null || query.searchTerm().isBlank())) {
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompte(
+                        query.utilisateurId(), query.typeCompteId(), pageable);
+            }
+            else if (query.searchTerm() != null && !query.searchTerm().isBlank()
+                    && query.typeCompteId() == null) {
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndNomContainingIgnoreCase(
+                        query.utilisateurId(), query.searchTerm(), pageable);
+            }
+            else if (query.typeCompteId() != null && query.searchTerm() != null && !query.searchTerm().isBlank()) {
+                result = compteRepository.findByUtilisateur_IdUtilisateurAndTypeCompte_IdTypeCompteAndNomContainingIgnoreCase(
+                        query.utilisateurId(), query.typeCompteId(), query.searchTerm(), pageable);
+            }
+            else {
+                result = compteRepository.findByUtilisateur_IdUtilisateur(query.utilisateurId(), pageable);
+            }
         }
 
         List<PaginatedAccountResponse.AccountData> data = result.getContent()

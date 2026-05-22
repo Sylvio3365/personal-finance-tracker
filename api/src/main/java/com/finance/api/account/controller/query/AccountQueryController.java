@@ -8,6 +8,7 @@ import com.finance.api.account.query.ListComptesByUtilisateurQuery;
 import com.finance.api.account.dto.AccountResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -37,9 +38,11 @@ public class AccountQueryController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) Long typeCompteId,
-            @RequestParam(required = false) String searchTerm
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false) BigDecimal minSolde,
+            @RequestParam(required = false) BigDecimal maxSolde
     ) {
         return accountQueryHandler.listByUtilisateurFiltered(
-                new ListComptesByUtilisateurFilteredQuery(utilisateurId, page, limit, typeCompteId, searchTerm));
+                new ListComptesByUtilisateurFilteredQuery(utilisateurId, page, limit, typeCompteId, searchTerm, minSolde, maxSolde));
     }
 }
