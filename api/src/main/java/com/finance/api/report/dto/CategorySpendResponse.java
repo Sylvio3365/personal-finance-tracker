@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class CategorySpendResponse {
     private Long categorieId;
     private String libelle;
+    private String icon;
     private BigDecimal totalDepense;
     private BigDecimal limite;
     private boolean depassement;

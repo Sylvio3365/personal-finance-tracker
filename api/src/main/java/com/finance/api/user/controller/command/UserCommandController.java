@@ -1,16 +1,17 @@
 package com.finance.api.user.controller.command;
 
 import com.finance.api.user.command.RegisterUtilisateurCommand;
+import com.finance.api.user.command.UpdatePasswordCommand;
+import com.finance.api.user.command.UpdateProfileCommand;
 import com.finance.api.user.command.UserCommandHandler;
+import com.finance.api.user.dto.PasswordUpdateRequest;
 import com.finance.api.user.dto.UserRegistrationRequest;
 import com.finance.api.user.dto.UserResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.finance.api.user.dto.UserUpdateRequest;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/command/utilisateurs")
+@RequestMapping("/command/users")
 public class UserCommandController {
     private final UserCommandHandler userCommandHandler;
 
@@ -28,5 +29,33 @@ public class UserCommandController {
                 request.getMotDePasse()
         );
         return userCommandHandler.register(command);
+    }
+
+    @PutMapping("/{userId}")
+    public UserResponse updateProfile(
+            @PathVariable Long userId,
+            @RequestBody UserUpdateRequest request
+    ) {
+        UpdateProfileCommand command = new UpdateProfileCommand(
+                userId,
+                request.getNom(),
+                request.getPrenom(),
+                request.getEmail(),
+                request.getDateNaissance()
+        );
+        return userCommandHandler.updateProfile(command);
+    }
+
+    @PutMapping("/{userId}/password")
+    public void updatePassword(
+            @PathVariable Long userId,
+            @RequestBody PasswordUpdateRequest request
+    ) {
+        UpdatePasswordCommand command = new UpdatePasswordCommand(
+                userId,
+                request.getCurrentPassword(),
+                request.getNewPassword()
+        );
+        userCommandHandler.updatePassword(command);
     }
 }

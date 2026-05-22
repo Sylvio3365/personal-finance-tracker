@@ -162,14 +162,14 @@ export default function Home() {
 
               <div className="mt-8 text-center">
                 <p className="text-sm text-[var(--ink-subtle)]">
-                  Nouveau sur l'application ?{" "}
-                  <button
+                  {/* Nouveau sur l'application ?{" "} */}
+                  {/* <button
                     type="button"
                     onClick={() => { setIsLogin(false); setToast(null); setStatus("idle"); }}
                     className="font-semibold text-[var(--accent)] hover:underline ml-1 cursor-pointer transition active:scale-95"
                   >
                     Créer un compte
-                  </button>
+                  </button> */}
                 </p>
               </div>
             </div>

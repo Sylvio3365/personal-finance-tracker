@@ -159,4 +159,27 @@ export class AccountService {
       throw new Error(error);
     }
   }
+
+  static async update(compteId: number, payload: { nom: string }): Promise<AccountResponse> {
+    const response = await fetch(`${API_BASE_URL}/command/comptes/${compteId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let error = "Erreur lors de la modification du compte";
+      try {
+        const data = await response.json();
+        error = data.message || data.error || error;
+      } catch {
+        error = await response.text() || error;
+      }
+      throw new Error(error);
+    }
+
+    return response.json();
+  }
 }

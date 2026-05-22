@@ -27,10 +27,12 @@ export interface TransactionData {
   note: string;
   categorieId: number;
   categorieLibelle: string;
+  categorieIcon?: string;
   transactionTypeId: number;
   transactionTypeLibelle: string;
   utilisateurCompteId: number;
   compteNom: string;
+  warning?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -46,6 +48,8 @@ export interface TransactionFilters {
   transactionTypeId?: number;
   categorieId?: number;
   searchTerm?: string;
+  minMontant?: number;
+  maxMontant?: number;
 }
 
 export class TransactionService {
@@ -85,6 +89,12 @@ export class TransactionService {
     if (filters.searchTerm && filters.searchTerm.trim() !== "") {
       params.append("searchTerm", filters.searchTerm.trim());
     }
+    if (filters.minMontant !== undefined && filters.minMontant !== null) {
+      params.append("minMontant", filters.minMontant.toString());
+    }
+    if (filters.maxMontant !== undefined && filters.maxMontant !== null) {
+      params.append("maxMontant", filters.maxMontant.toString());
+    }
 
     const response = await fetch(`${API_BASE_URL}/query/transactions/paginated?${params.toString()}`);
     if (!response.ok) {
@@ -92,7 +102,7 @@ export class TransactionService {
     }
 
     const data = await response.json() as {
-      data: { id: number; montant: number; dateTransaction: string; note: string; categorieId: number; categorieLibelle: string; transactionTypeId: number; transactionTypeLibelle: string; utilisateurCompteId: number; compteNom: string }[];
+      data: { id: number; montant: number; dateTransaction: string; note: string; categorieId: number; categorieLibelle: string; categorieIcon?: string; transactionTypeId: number; transactionTypeLibelle: string; utilisateurCompteId: number; compteNom: string; warning?: string }[];
       totalItems: number;
       totalPages: number;
       currentPage: number;
@@ -107,10 +117,12 @@ export class TransactionService {
         note: item.note,
         categorieId: item.categorieId,
         categorieLibelle: item.categorieLibelle,
+        categorieIcon: item.categorieIcon,
         transactionTypeId: item.transactionTypeId,
         transactionTypeLibelle: item.transactionTypeLibelle,
         utilisateurCompteId: item.utilisateurCompteId,
         compteNom: item.compteNom,
+        warning: item.warning,
       })),
       totalItems: data.totalItems,
       totalPages: data.totalPages,

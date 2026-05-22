@@ -18,6 +18,12 @@ public class Categorie {
     @Column(length = 50)
     private String libelle;
 
+    @Column(length = 100)
+    private String icon;
+
     @Column(precision = 25, scale = 2)
     private BigDecimal limite;
+
+    @Column
+    private Boolean active = true;
 }

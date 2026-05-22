@@ -98,6 +98,70 @@ public class TransactionCommandHandler {
         );
     }
 
+    public void transfer(TransferCommand command) {
+        UtilisateurCompte fromAccount = compteRepository.findById(command.fromAccountId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compte source introuvable"));
+        UtilisateurCompte toAccount = compteRepository.findById(command.toAccountId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compte destination introuvable"));
+
+        if (command.fromAccountId().equals(command.toAccountId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Impossible de transférer vers le même compte");
+        }
+
+        BigDecimal montant = command.montant();
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Montant invalide");
+        }
+
+        BigDecimal soldeFrom = parseSolde(fromAccount.getSoldeActuel());
+        if (soldeFrom.subtract(montant).compareTo(BigDecimal.ZERO) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solde insuffisant");
+        }
+
+        // Get transaction types
+        TransactionType depenseType = transactionTypeRepository.findByLibelle("depense")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de transaction introuvable"));
+        TransactionType revenuType = transactionTypeRepository.findByLibelle("revenu")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de transaction introuvable"));
+
+        // Get or create transfer category
+        Categorie transferCategory = categorieRepository.findByLibelle("Transfert")
+                .orElseGet(() -> {
+                    Categorie newCategory = new Categorie();
+                    newCategory.setLibelle("Transfert");
+                    newCategory.setIcon("mdi:swap-horizontal");
+                    return categorieRepository.save(newCategory);
+                });
+
+        // Create expense transaction for source account
+        Transaction expenseTransaction = new Transaction();
+        expenseTransaction.setMontant(montant);
+        expenseTransaction.setDateTransaction(LocalDateTime.now());
+        expenseTransaction.setNote(command.note() != null ? command.note() + " (Transfert vers " + toAccount.getNom() + ")" : "Transfert vers " + toAccount.getNom());
+        expenseTransaction.setCategorie(transferCategory);
+        expenseTransaction.setTransactionType(depenseType);
+        expenseTransaction.setUtilisateurCompte(fromAccount);
+        transactionRepository.save(expenseTransaction);
+
+        // Create income transaction for destination account
+        Transaction incomeTransaction = new Transaction();
+        incomeTransaction.setMontant(montant);
+        incomeTransaction.setDateTransaction(LocalDateTime.now());
+        incomeTransaction.setNote(command.note() != null ? command.note() + " (Transfert de " + fromAccount.getNom() + ")" : "Transfert de " + fromAccount.getNom());
+        incomeTransaction.setCategorie(transferCategory);
+        incomeTransaction.setTransactionType(revenuType);
+        incomeTransaction.setUtilisateurCompte(toAccount);
+        transactionRepository.save(incomeTransaction);
+
+        // Update balances
+        fromAccount.setSoldeActuel(formatSolde(soldeFrom.subtract(montant)));
+        BigDecimal soldeTo = parseSolde(toAccount.getSoldeActuel());
+        toAccount.setSoldeActuel(formatSolde(soldeTo.add(montant)));
+
+        compteRepository.save(fromAccount);
+        compteRepository.save(toAccount);
+    }
+
     private boolean isDepense(String libelle) {
         return libelle != null && libelle.trim().equalsIgnoreCase("depense");
     }

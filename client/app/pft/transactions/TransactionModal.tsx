@@ -9,6 +9,7 @@ import { AccountService, AccountResponse } from "../../services/account/AccountS
 import { ReferenceService, Category, TransactionType } from "../../services/reference/ReferenceService";
 import { TransactionService } from "../../services/transaction/TransactionService";
 import { UserService } from "../../services/user/UserService";
+import CustomSelect from "../components/CustomSelect";
 
 interface TransactionModalProps {
   onTransactionCreated?: () => void;
@@ -60,9 +61,10 @@ export default function TransactionModal({ onTransactionCreated }: TransactionMo
           ReferenceService.getCategories(),
           ReferenceService.getTransactionTypes(),
         ]);
-        setCategories(catData);
+        const activeCategories = catData.filter(c => c.active !== false);
+        setCategories(activeCategories);
         setTypes(typesData);
-        if (catData.length > 0) setCategorieId(catData[0].id.toString());
+        if (activeCategories.length > 0) setCategorieId(activeCategories[0].id.toString());
         if (typesData.length > 0) setTypeId(typesData[0].id.toString());
         const today = new Date().toISOString().split("T")[0];
         setDateTransaction(today);
@@ -111,6 +113,23 @@ export default function TransactionModal({ onTransactionCreated }: TransactionMo
       const m = parseFloat(montant.replace(",", "."));
       if (isNaN(m)) throw new Error("Montant invalide");
 
+      // Check account balance for debit transactions
+      const selectedAccount = comptes.find(c => c.id.toString() === compteId);
+      if (selectedAccount) {
+        const selectedType = types.find(t => t.id.toString() === typeId);
+        // Assuming transaction types with names like "Dépense" or "Retrait" are debits
+        // You may need to adjust this based on your actual transaction type logic
+        const isDebit = selectedType?.libelle.toLowerCase().includes('dépense') || 
+                       selectedType?.libelle.toLowerCase().includes('retrait') ||
+                       selectedType?.libelle.toLowerCase().includes('expense');
+        
+        if (isDebit && selectedAccount.soldeActuel < m) {
+          setToast({ message: `Solde insuffisant. Solde actuel: ${selectedAccount.soldeActuel} Ar`, type: "error" });
+          setLoading(false);
+          return;
+        }
+      }
+
       const response = await TransactionService.create({
         montant: m,
         dateTransaction: dateTransaction ? new Date(dateTransaction).toISOString() : undefined,
@@ -129,6 +148,13 @@ export default function TransactionModal({ onTransactionCreated }: TransactionMo
       setMontant("");
       setNote("");
       setLimitWarning(null);
+
+      // Reload accounts to update balances
+      const user = UserService.getStoredUser();
+      if (user) {
+        const userComptes = await AccountService.listByUtilisateur(parseInt(String(user.id), 10));
+        setComptes(userComptes);
+      }
 
       const modal = document.getElementById("transaction-modal") as HTMLInputElement;
       if (modal) modal.checked = false;
@@ -159,41 +185,36 @@ export default function TransactionModal({ onTransactionCreated }: TransactionMo
         {/* Compte — CustomSelect */}
         <label className="grid gap-2 text-sm font-medium">
           Compte
-          <select
+          <CustomSelect
             value={compteId}
-            onChange={(e) => setCompteId(e.target.value)}
-            required
-            className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-          >
-            <option value="">Sélectionner un compte</option>
-            {comptes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-          </select>
+            onChange={setCompteId}
+            options={[
+              { label: "Sélectionner un compte", value: "" },
+              ...comptes.map(c => ({ label: `${c.nom} (${c.soldeActuel} Ar)`, value: c.id.toString() }))
+            ]}
+          />
         </label>
         <div className="grid grid-cols-2 gap-4">
           {/* Type */}
           <label className="grid gap-2 text-sm font-medium">
             Type
-            <select
+            <CustomSelect
               value={typeId}
-              onChange={(e) => setTypeId(e.target.value)}
-              required
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {types.map(t => <option key={t.id} value={t.id}>{t.libelle}</option>)}
-            </select>
+              onChange={setTypeId}
+              options={types.map(t => ({ label: t.libelle, value: t.id.toString() }))}
+            />
           </label>
           {/* Catégorie */}
           <label className="grid gap-2 text-sm font-medium">
             Categorie
-            <select
+            <CustomSelect
               value={categorieId}
-              onChange={(e) => setCategorieId(e.target.value)}
-              required
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              <option value="">Sélectionner</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.libelle}</option>)}
-            </select>
+              onChange={setCategorieId}
+              options={[
+                { label: "Sélectionner", value: "" },
+                ...categories.map(c => ({ label: c.libelle, value: c.id.toString() }))
+              ]}
+            />
           </label>
         </div>
         <div className="grid grid-cols-2 gap-4">

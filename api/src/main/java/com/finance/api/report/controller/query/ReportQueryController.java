@@ -17,7 +17,7 @@ public class ReportQueryController {
     @GetMapping("/monthly-summary")
     public MonthlySummaryResponse getMonthlySummary(
             @RequestParam Long utilisateurId,
-            @RequestParam Long compteId,
+            @RequestParam(required = false) Long compteId,
             @RequestParam int annee,
             @RequestParam int mois
     ) {

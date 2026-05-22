@@ -8,6 +8,8 @@ import CategorySpendList from "./CategorySpendList";
 import { UserService } from "../../../services/user/UserService";
 import { AccountService, AccountResponse } from "../../../services/account/AccountService";
 import LoadingIndicator from "../../../components/LoadingIndicator";
+import CustomSelect from "../../components/CustomSelect";
+import { formatCurrency } from "../../../utils/currency";
 
 export default function MonthlyReportPage() {
   const [user, setUser] = useState<{ id: number } | null>(null);
@@ -44,7 +46,7 @@ export default function MonthlyReportPage() {
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
-  if (!user) return <LoadingIndicator text="Chargement..." />;
+  if (!user || loading) return <LoadingIndicator text="Chargement..." />;
 
   return (
     <div className="min-h-screen w-full px-6 py-10 sm:px-10 lg:px-16">
@@ -60,48 +62,56 @@ export default function MonthlyReportPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="grid gap-2">
             <label className="text-sm font-medium">Compte</label>
-            <select
-              value={selectedAccount || ""}
-              onChange={(e) => setSelectedAccount(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              <option value="">Choisir un compte</option>
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.nom}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedAccount?.toString() || ""}
+              onChange={(v) => setSelectedAccount(v ? Number(v) : null)}
+              options={[
+                { label: "Choisir un compte", value: "" },
+                ...accounts.map((acc) => ({
+                  label: acc.nom,
+                  value: acc.id.toString(),
+                })),
+              ]}
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Année</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedYear.toString()}
+              onChange={(v) => setSelectedYear(Number(v))}
+              options={years.map((y) => ({
+                label: y.toString(),
+                value: y.toString(),
+              }))}
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium">Mois</label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="h-11 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] text-[var(--foreground)] px-4 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {new Date(2000, m - 1).toLocaleDateString("fr-FR", { month: "long" })}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              value={selectedMonth.toString()}
+              onChange={(v) => setSelectedMonth(Number(v))}
+              options={months.map((m) => ({
+                label: new Date(2000, m - 1).toLocaleDateString("fr-FR", { month: "long" }),
+                value: m.toString(),
+              }))}
+            />
           </div>
         </div>
+
+        {/* ── Solde de tous les comptes ── */}
+        {accounts.length > 0 && (
+          <div className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-6">
+            <h3 className="text-sm font-medium text-[var(--ink)] mb-4">Solde de tous les comptes</h3>
+            <div className="grid gap-3">
+              {accounts.map((account) => (
+                <div key={account.id} className="flex items-center justify-between p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02]">
+                  <span className="text-sm font-medium">{account.nom}</span>
+                  <span className="text-sm font-semibold text-[var(--foreground)]">{formatCurrency(account.soldeActuel)} Ar</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Contenu ── */}
         {selectedAccount && user ? (

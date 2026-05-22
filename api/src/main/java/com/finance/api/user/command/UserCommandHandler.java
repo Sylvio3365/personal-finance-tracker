@@ -45,4 +45,56 @@ public class UserCommandHandler {
                 saved.getEmail(),
                 saved.getDtn());
     }
+
+    public UserResponse updateProfile(UpdateProfileCommand command) {
+        Utilisateur utilisateur = utilisateurRepository.findById(command.utilisateurId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        // Check if email is already used by another user
+        if (command.email() != null && !command.email().isBlank()) {
+            utilisateurRepository.findByEmail(command.email()).ifPresent(existing -> {
+                if (!existing.getIdUtilisateur().equals(command.utilisateurId())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Email deja utilise");
+                }
+            });
+        }
+
+        if (command.nom() != null && !command.nom().isBlank()) {
+            utilisateur.setNom(command.nom());
+        }
+        if (command.prenom() != null && !command.prenom().isBlank()) {
+            utilisateur.setPrenom(command.prenom());
+        }
+        if (command.email() != null && !command.email().isBlank()) {
+            utilisateur.setEmail(command.email());
+        }
+        if (command.dateNaissance() != null) {
+            utilisateur.setDtn(command.dateNaissance());
+        }
+
+        Utilisateur saved = utilisateurRepository.save(utilisateur);
+        return new UserResponse(
+                saved.getIdUtilisateur(),
+                saved.getNom(),
+                saved.getPrenom(),
+                saved.getNom() + " " + saved.getPrenom(),
+                saved.getEmail(),
+                saved.getDtn());
+    }
+
+    public void updatePassword(UpdatePasswordCommand command) {
+        Utilisateur utilisateur = utilisateurRepository.findById(command.utilisateurId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(command.currentPassword(), utilisateur.getMotDePasse())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mot de passe actuel incorrect");
+        }
+
+        if (command.newPassword() == null || command.newPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nouveau mot de passe obligatoire");
+        }
+
+        utilisateur.setMotDePasse(passwordEncoder.encode(command.newPassword()));
+        utilisateurRepository.save(utilisateur);
+    }
 }

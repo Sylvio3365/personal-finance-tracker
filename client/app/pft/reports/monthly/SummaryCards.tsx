@@ -12,7 +12,7 @@ export default function SummaryCards({
   month,
 }: {
   utilisateurId: number;
-  compteId: number;
+  compteId: number | null;
   year: number;
   month: number;
 }) {
@@ -43,7 +43,18 @@ export default function SummaryCards({
     }
   };
 
-  if (loading) return <LoadingIndicator text="Chargement du résumé..." />;
+  if (loading) {
+    return (
+      <section className="mt-8 grid gap-6 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-3xl border border-black/5 bg-[var(--surface)] p-6">
+            <div className="h-4 w-24 bg-black/5 dark:bg-white/10 rounded animate-pulse mb-4" />
+            <div className="h-8 w-32 bg-black/5 dark:bg-white/10 rounded animate-pulse" />
+          </div>
+        ))}
+      </section>
+    );
+  }
 
   if (error)
     return (
@@ -51,6 +62,8 @@ export default function SummaryCards({
         {error}
       </div>
     );
+
+  if (!summary) return null;
 
   const cards = [
     {
@@ -60,7 +73,11 @@ export default function SummaryCards({
     },
     {
       label: "Total dépenses",
-      value: summary ? `−${formatCurrency(summary.totalDepense)}` : "0,00",
+      value: summary
+        ? summary.totalDepense === 0
+          ? "0,00"
+          : `−${formatCurrency(summary.totalDepense)}`
+        : "0,00",
       color: "text-red-600 dark:text-red-400",
     },
     {

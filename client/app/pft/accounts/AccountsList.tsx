@@ -7,6 +7,7 @@ import {
   IconFilter,
   IconRefresh,
   IconCheck,
+  IconPlus,
 } from "../components/icons";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
@@ -144,6 +145,7 @@ function CustomSelect({
 export default function AccountsList({ refreshTrigger }: AccountsListProps) {
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
   const [typeComptes, setTypeComptes] = useState<TypeCompte[]>([]);
+  const [editingAccount, setEditingAccount] = useState<AccountResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -206,6 +208,19 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
     try {
       await AccountService.delete(compteId);
       setToast({ message: "Compte supprimé avec succès !", type: "success" });
+      loadAccounts();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erreur";
+      setToast({ message: errorMessage, type: "error" });
+    }
+  };
+
+  // ─── Modification ─────────────────────────────────────────
+  const handleUpdateAccount = async (compteId: number, nom: string) => {
+    try {
+      await AccountService.update(compteId, { nom });
+      setToast({ message: "Compte modifié avec succès !", type: "success" });
+      setEditingAccount(null);
       loadAccounts();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erreur";
@@ -393,6 +408,7 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
           <div className="grid gap-4">
             {accounts.map((compte) => {
               const typeName = getTypeCompteName(compte.typeCompteId);
+              const isEditing = editingAccount?.id === compte.id;
               return (
                 <div
                   key={compte.id}
@@ -402,14 +418,45 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                     <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-white/10 text-[var(--accent)]">
                       <IconWallet className="h-5 w-5" />
                     </span>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{compte.nom}</p>
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium leading-tight ${getTypeColor(typeName)}`}
+                    {isEditing ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const input = e.currentTarget.elements.namedItem('nom') as HTMLInputElement;
+                          handleUpdateAccount(compte.id, input.value);
+                        }}
+                        className="flex items-center gap-2"
                       >
-                        {typeName}
-                      </span>
-                    </div>
+                        <input
+                          name="nom"
+                          defaultValue={compte.nom}
+                          autoFocus
+                          className="h-9 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#121415] px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+                        />
+                        <button
+                          type="submit"
+                          className="h-9 px-3 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:brightness-95"
+                        >
+                          OK
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingAccount(null)}
+                          className="h-9 px-3 rounded-xl border border-black/10 dark:border-white/10 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+                        >
+                          Annuler
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">{compte.nom}</p>
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium leading-tight ${getTypeColor(typeName)}`}
+                        >
+                          {typeName}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
@@ -420,13 +467,37 @@ export default function AccountsList({ refreshTrigger }: AccountsListProps) {
                         Solde actuel
                       </p>
                     </div>
-                    <button
-                      onClick={() => handleDelete(compte.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition"
-                      title="Supprimer le compte"
-                    >
-                      <IconTrash className="h-4 w-4" />
-                    </button>
+                    {!isEditing && (
+                      <>
+                        
+                        <button
+                          onClick={() => setEditingAccount(compte)}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ink-subtle)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+                          title="Modifier"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(compte.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition"
+                          title="Supprimer le compte"
+                        >
+                          <IconTrash className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );

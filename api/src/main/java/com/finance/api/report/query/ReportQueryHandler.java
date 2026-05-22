@@ -28,21 +28,43 @@ public class ReportQueryHandler {
         LocalDateTime start = month.atDay(1).atStartOfDay();
         LocalDateTime end = month.atEndOfMonth().atTime(23, 59, 59);
 
-        BigDecimal totalRevenus = transactionRepository.sumByCompteAndTypeBetween(
-                query.compteId(),
-                "revenu",
-                start,
-                end
-        );
-        BigDecimal totalDepenses = transactionRepository.sumByCompteAndTypeBetween(
-                query.compteId(),
-                "depense",
-                start,
-                end
-        );
+        // Assuming transaction type ID 1 is revenue and ID 2 is expense
+        BigDecimal totalRevenus;
+        BigDecimal totalDepenses;
+        List<Object[]> raw;
+
+        if (query.compteId() != null) {
+            // Specific account
+            totalRevenus = transactionRepository.sumByCompteAndTypeBetween(
+                    query.compteId(),
+                    1L,
+                    start,
+                    end
+            );
+            totalDepenses = transactionRepository.sumByCompteAndTypeBetween(
+                    query.compteId(),
+                    2L,
+                    start,
+                    end
+            );
+            raw = transactionRepository.sumDepenseByCategorie(query.compteId(), start, end);
+        } else {
+            // All accounts
+            totalRevenus = transactionRepository.sumByTypeBetween(
+                    1L,
+                    start,
+                    end
+            );
+            totalDepenses = transactionRepository.sumByTypeBetween(
+                    2L,
+                    start,
+                    end
+            );
+            raw = transactionRepository.sumDepenseByCategorieAll(start, end);
+        }
+
         BigDecimal soldeNet = totalRevenus.subtract(totalDepenses);
 
-        List<Object[]> raw = transactionRepository.sumDepenseByCategorie(query.compteId(), start, end);
         List<CategorySpendResponse> categories = new ArrayList<>();
         for (Object[] row : raw) {
             Long categorieId = (Long) row[0];
@@ -50,8 +72,9 @@ public class ReportQueryHandler {
             BigDecimal total = (BigDecimal) row[2];
             Categorie categorie = categorieRepository.findById(categorieId).orElse(null);
             BigDecimal limite = categorie == null ? null : categorie.getLimite();
+            String icon = categorie == null ? null : categorie.getIcon();
             boolean depassement = limite != null && total.compareTo(limite) > 0;
-            categories.add(new CategorySpendResponse(categorieId, libelle, total, limite, depassement));
+            categories.add(new CategorySpendResponse(categorieId, libelle, icon, total, limite, depassement));
         }
 
         return new MonthlySummaryResponse(

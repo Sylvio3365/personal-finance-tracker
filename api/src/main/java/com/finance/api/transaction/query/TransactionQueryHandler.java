@@ -42,7 +42,17 @@ public class TransactionQueryHandler {
 
         Page<Transaction> result;
 
-        if (query.compteId() != null && query.transactionTypeId() == null && query.categorieId() == null) {
+        // Use the generic query with montant filters if they are present
+        if (query.minMontant() != null || query.maxMontant() != null) {
+            result = transactionRepository.findFilteredWithMontant(
+                    query.utilisateurId(),
+                    query.compteId(),
+                    query.categorieId(),
+                    query.transactionTypeId(),
+                    query.minMontant(),
+                    query.maxMontant(),
+                    pageable);
+        } else if (query.compteId() != null && query.transactionTypeId() == null && query.categorieId() == null) {
             // Compte seul
             result = transactionRepository.findByUtilisateurCompte_IdUtilisateurCompteAndUtilisateurCompte_Utilisateur_IdUtilisateur(
                     query.compteId(), query.utilisateurId(), pageable);
@@ -97,6 +107,7 @@ public class TransactionQueryHandler {
                 t.getNote(),
                 t.getCategorie().getIdCategorie(),
                 t.getCategorie().getLibelle(),
+                t.getCategorie().getIcon(),
                 t.getTransactionType().getIdTransactionType(),
                 t.getTransactionType().getLibelle(),
                 t.getUtilisateurCompte().getIdUtilisateurCompte(),

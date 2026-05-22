@@ -41,10 +41,12 @@ public class TransactionQueryController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) Long compteId,
             @RequestParam(required = false) Long transactionTypeId,
-            @RequestParam(required = false) Long categorieId) {
+            @RequestParam(required = false) Long categorieId,
+            @RequestParam(required = false) BigDecimal minMontant,
+            @RequestParam(required = false) BigDecimal maxMontant) {
         return transactionQueryHandler.listByUtilisateurPaginated(
                 new ListTransactionsFilteredQuery(utilisateurId, compteId, transactionTypeId, categorieId, page,
-                        limit));
+                        limit, minMontant, maxMontant));
     }
 
     @GetMapping("/sum-depense-categorie")
