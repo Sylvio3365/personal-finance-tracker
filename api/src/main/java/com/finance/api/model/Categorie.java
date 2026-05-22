@@ -24,6 +24,6 @@ public class Categorie {
     @Column(precision = 25, scale = 2)
     private BigDecimal limite;
 
-    @Column(nullable = false)
+    @Column
     private Boolean active = true;
 }

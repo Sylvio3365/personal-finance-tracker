@@ -4,7 +4,6 @@ import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { IconWallet } from "../components/icons";
 import AccountModal from "./AccountModal";
-import TransferModal from "./TransferModal";
 import AccountsList from "./AccountsList";
 
 export default function AccountsPage() {
@@ -20,10 +19,7 @@ export default function AccountsPage() {
         />
 
         <section className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-8">
-          <div className="flex gap-3 mb-6">
-            <AccountModal onAccountCreated={() => setRefreshTrigger((prev) => prev + 1)} />
-            <TransferModal onTransferCompleted={() => setRefreshTrigger((prev) => prev + 1)} />
-          </div>
+          <AccountModal onAccountCreated={() => setRefreshTrigger((prev) => prev + 1)} />
           <AccountsList refreshTrigger={refreshTrigger} />
         </section>
       </main>

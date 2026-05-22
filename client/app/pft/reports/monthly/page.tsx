@@ -9,6 +9,7 @@ import { UserService } from "../../../services/user/UserService";
 import { AccountService, AccountResponse } from "../../../services/account/AccountService";
 import LoadingIndicator from "../../../components/LoadingIndicator";
 import CustomSelect from "../../components/CustomSelect";
+import { formatCurrency } from "../../../utils/currency";
 
 export default function MonthlyReportPage() {
   const [user, setUser] = useState<{ id: number } | null>(null);
@@ -45,7 +46,7 @@ export default function MonthlyReportPage() {
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
-  if (!user) return <LoadingIndicator text="Chargement..." />;
+  if (!user || loading) return <LoadingIndicator text="Chargement..." />;
 
   return (
     <div className="min-h-screen w-full px-6 py-10 sm:px-10 lg:px-16">
@@ -96,6 +97,21 @@ export default function MonthlyReportPage() {
             />
           </div>
         </div>
+
+        {/* ── Solde de tous les comptes ── */}
+        {accounts.length > 0 && (
+          <div className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-6">
+            <h3 className="text-sm font-medium text-[var(--ink)] mb-4">Solde de tous les comptes</h3>
+            <div className="grid gap-3">
+              {accounts.map((account) => (
+                <div key={account.id} className="flex items-center justify-between p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02]">
+                  <span className="text-sm font-medium">{account.nom}</span>
+                  <span className="text-sm font-semibold text-[var(--foreground)]">{formatCurrency(account.soldeActuel)} Ar</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Contenu ── */}
         {selectedAccount && user ? (

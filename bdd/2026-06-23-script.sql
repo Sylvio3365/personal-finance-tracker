@@ -44,6 +44,11 @@ INSERT INTO utilisateur (id_utilisateur, nom, prenom, email, dtn, mot_de_passe) 
   (1, 'Dupont', 'Jean', 'jean.dupont@test.com', '1990-05-15', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36gBS1Hp')
 ON CONFLICT (id_utilisateur) DO NOTHING;
 
+
+INSERT INTO utilisateur (id_utilisateur, nom, prenom, email, dtn, mot_de_passe) VALUES
+  (2, 'Test', 'User', 'test@test.com', '1990-05-15', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36gBS1Hp')
+ON CONFLICT (id_utilisateur) DO NOTHING;
+
 -- ──────────────────────────────────────────────────────────────────
 -- 5. Comptes Utilisateur
 -- ──────────────────────────────────────────────────────────────────

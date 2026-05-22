@@ -36,8 +36,6 @@ import {
 } from "@mdi/js";
 import Toast from "../../components/Toast";
 import LoadingIndicator from "../../components/LoadingIndicator";
-import ModalShell from "../components/ModalShell";
-import ModalHeader from "../components/ModalHeader";
 import {
   ReferenceService,
   Category,
@@ -91,6 +89,7 @@ export default function CategoriesList() {
     Record<number, number>
   >({});
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -143,9 +142,14 @@ export default function CategoriesList() {
   };
 
   const handleToggleActive = async (category: Category) => {
+    const newActive = !category.active;
+    setCategories((prev) =>
+      prev.map((c) => (c.id === category.id ? { ...c, active: newActive } : c)),
+    );
+
     try {
       const updated = await ReferenceService.updateCategory(category.id, {
-        active: !category.active,
+        active: newActive,
       });
       setCategories((prev) =>
         prev.map((c) => (c.id === updated.id ? updated : c)),
@@ -155,6 +159,10 @@ export default function CategoriesList() {
         type: "success",
       });
     } catch (error) {
+      // Revert on error
+      setCategories((prev) =>
+        prev.map((c) => (c.id === category.id ? category : c)),
+      );
       const msg =
         error instanceof Error
           ? error.message
@@ -182,26 +190,41 @@ export default function CategoriesList() {
       )}
 
       <div className="mb-8 flex justify-end gap-4">
-        {/* Modal Création */}
-        <ModalShell
-          id="category-modal"
-          title=""
-          triggerContent={
-            <>
-              <IconPlus className="h-4 w-4" />
-              Nouvelle categorie
-            </>
-          }
+        <button
+          type="button"
+          onClick={() => setShowCreateModal(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white transition hover:brightness-95"
         >
-          <ModalHeader title="Ajouter une catégorie" closeId="category-modal" />
-          <CategoryFormInline
-            onSuccess={() => {
-              loadCategories();
-            }}
-            closeId="category-modal"
-          />
-        </ModalShell>
+          <IconPlus className="h-4 w-4" />
+          Nouvelle categorie
+        </button>
       </div>
+
+      {/* Modal Création */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-[#f8f6f2] dark:bg-[#1a1d1e] p-8 shadow-2xl shadow-black/20">
+            <div className="flex items-center justify-between pb-6">
+              <h2 className="text-xl font-semibold text-[var(--foreground)]">Ajouter une catégorie</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--ink-subtle)] transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--foreground)]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <CategoryFormInline
+              onSuccess={() => {
+                loadCategories();
+                setShowCreateModal(false);
+              }}
+              closeId=""
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modal Edition */}
       {editingCategory && (
@@ -223,6 +246,7 @@ export default function CategoriesList() {
               onSuccess={() => {
                 loadCategories();
                 setEditingCategory(null);
+                setToast({ message: "Catégorie modifiée avec succès", type: "success" });
               }}
               closeId="edit-modal-close"
             />
@@ -299,8 +323,11 @@ export default function CategoriesList() {
                     <td className="px-6 py-4 text-right text-[var(--ink-subtle)]">
                       {limite > 0 ? `${formatCurrency(limite)} Ar` : "—"}
                     </td>
+
+                    {/* ── STATUT ── */}
                     <td className="px-6 py-4 text-center">
                       <button
+                        type="button"
                         onClick={() => handleToggleActive(cat)}
                         className={`relative inline-flex h-7 w-13 items-center rounded-full transition-all duration-200 ${
                           cat.active
@@ -316,8 +343,11 @@ export default function CategoriesList() {
                         />
                       </button>
                     </td>
+
+                    {/* ── ACTIONS ── */}
                     <td className="px-6 py-4 text-center">
                       <button
+                        type="button"
                         onClick={() => setEditingCategory(cat)}
                         className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ink-subtle)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
                         title="Modifier"
@@ -453,7 +483,7 @@ function CategoryFormInline({
         }
         payload.limite = val;
       } else {
-        payload.limite = null; // To clear limit if it was set
+        payload.limite = null;
       }
 
       if (initialData) {

@@ -109,14 +109,41 @@ export default function CategorySpendList({
     }
   };
 
-  if (loading) return <LoadingIndicator text="Chargement des dépenses..." />;
-
   if (error)
     return (
       <div className="mt-8 p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-2xl">
         {error}
       </div>
     );
+
+  if (loading) {
+    return (
+      <section className="mt-8 rounded-3xl border border-black/5 bg-[var(--surface)] p-8">
+        <h2 className="text-lg font-semibold mb-5">Dépenses par catégorie</h2>
+        <div className="mt-5 grid gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-2xl border border-black/5 bg-[#f8f6f2] dark:bg-[#1a1d1e] p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl bg-black/5 dark:bg-white/10 animate-pulse" />
+                  <div>
+                    <div className="h-4 w-32 bg-black/5 dark:bg-white/10 rounded animate-pulse mb-2" />
+                    <div className="h-3 w-24 bg-black/5 dark:bg-white/10 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-5 w-8 bg-black/5 dark:bg-white/10 rounded animate-pulse" />
+              </div>
+              <div className="mt-3 h-2 w-full rounded-full bg-black/5 dark:bg-white/10">
+                <div className="h-2 w-1/2 rounded-full bg-black/5 dark:bg-white/10 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (!categories.length) return null;
 
   const getProgressColor = (pct: number) => {
     if (pct >= 100) return "bg-red-500";

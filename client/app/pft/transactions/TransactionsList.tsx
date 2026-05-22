@@ -306,7 +306,7 @@ export default function TransactionsList({
   };
 
   // ─── Rendu ────────────────────────────────────────────────
-  if (loading && transactions.length === 0) {
+  if (loading) {
     return <LoadingIndicator text="Chargement des transactions..." />;
   }
 
